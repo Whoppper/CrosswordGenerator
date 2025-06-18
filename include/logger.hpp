@@ -24,11 +24,11 @@ public:
     
     ~Logger();
 
-    void log(LogLevel level, const QString &message, const QString &username);
+    void log(LogLevel level, const QString &message);
     static Logger &getInstance();
 
 signals:
-    void logMessage(LogLevel level, const QString &message, const QString &username);
+    void logMessage(LogLevel level, const QString &message);
 
 private:
     QString logDirectory;
@@ -41,7 +41,7 @@ private:
     QString getLogFileName();
     Logger();
     void loadSettings();
-    void writeLogMessage(LogLevel level, const QString &message, const QString &username);
+    void writeLogMessage(LogLevel level, const QString &message);
 };
 
 #endif // LOGGER_H

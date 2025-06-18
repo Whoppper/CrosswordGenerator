@@ -1,9 +1,8 @@
 #include "databasemanager.hpp"
 #include "logger.hpp"
 
-#include <QInputDialog>
 #include <QString>
-#include <QMessageBox>
+
 
 DatabaseManager::DatabaseManager()
 {
@@ -23,7 +22,7 @@ bool DatabaseManager::initializeDatabase(const QString &path)
 
     if (!db.open())
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Unable to open database!", "");
+        Logger::getInstance().log(Logger::LogLevel::Error, "Unable to open database!");
         return false;
     }
 
@@ -38,7 +37,7 @@ bool DatabaseManager::initializeDatabase(const QString &path)
 
     if (!query.exec(createWordsTable))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to create words table", "");
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to create words table");
         return false;
     }
     if (isEmpty())
@@ -58,7 +57,7 @@ bool DatabaseManager::isEmpty()
 
     if (!query.exec(countQuery))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to execute count query for words table", query.lastError().text());
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to execute count query for words table");
         return true;
     }
     if (query.next())
@@ -74,7 +73,7 @@ bool DatabaseManager::fillDB()
     QFile file(":/data/dico.txt");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to open words file", file.errorString());
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to open words file");
         db.close();
         return false;
     }
@@ -84,14 +83,14 @@ bool DatabaseManager::fillDB()
 
     if (!db.transaction())
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to start database transaction", db.lastError().text());
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to start database transaction");
         return false;
     }
 
     QSqlQuery query(db);
     if (!query.prepare("INSERT OR IGNORE INTO words (word, definition, hint) VALUES (:word, :definition, :hint);")) 
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to prepare insert query", query.lastError().text());
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to prepare insert query");
         db.rollback();
         return false;
     }
@@ -107,14 +106,14 @@ bool DatabaseManager::fillDB()
 
             if (!query.exec())
             {
-                Logger::getInstance().log(Logger::LogLevel::Warning, QString("Failed to insert word '%1'").arg(line), query.lastError().text());
+                Logger::getInstance().log(Logger::LogLevel::Warning, QString("Failed to insert word '%1'").arg(line));
             }
         }
     }
 
     if (!db.commit())
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to commit database transaction", db.lastError().text());
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to commit database transaction");
         db.rollback();
         return false;
     }

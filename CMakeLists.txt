@@ -21,9 +21,11 @@ set(SOURCE_FILES
     resources.qrc
     src/databasemanager.cpp 
     src/logger.cpp
+    src/gridmanager.cpp
 
     include/logger.hpp 
-    include/databasemanager.hpp 
+    include/databasemanager.hpp
+    include/gridmanager.hpp
 )
 
 add_executable(crossword src/main.cpp ${SOURCE_FILES})

@@ -30,9 +30,9 @@ Logger::~Logger()
     }
 }
 
-void Logger::log(LogLevel level, const QString &message, const QString &username)
+void Logger::log(LogLevel level, const QString &message)
 {
-    emit logMessage(level, message, username);
+    emit logMessage(level, message);
 }
 
 void Logger::openLogFile()
@@ -74,7 +74,7 @@ QString Logger::getLogFileName()
     return logDirectory + "/log_" + "_" + QDate::currentDate().toString("yyyyMMdd") + ".log";
 }
 
-void Logger::writeLogMessage(LogLevel level, const QString &message, const QString &username)
+void Logger::writeLogMessage(LogLevel level, const QString &message)
 {
     QString levelStr;
     switch (level) {
@@ -95,7 +95,7 @@ void Logger::writeLogMessage(LogLevel level, const QString &message, const QStri
         break;
     }
 
-    QString logMessage = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz") + " [" + levelStr + "] " + username + ": "+ message;
+    QString logMessage = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz") + " [" + levelStr + "] " + ": "+ message;
     logStream << logMessage << Qt::endl;
     logStream.flush();
 
@@ -109,5 +109,4 @@ void Logger::loadSettings()
 {
     QSettings settings(":/data/config.ini", QSettings::IniFormat);
     logDirectory = settings.value("Log/logDirectory", "./logs").toString();
-    maxFileSize = settings.value("Logg/maxFileSizeMo", 10 * 1024 * 1024).toLongLong();
 }
