@@ -19,6 +19,11 @@ set(CMAKE_AUTORCC ON)
 set(SOURCE_FILES
     
     resources.qrc
+    src/databasemanager.cpp 
+    src/logger.cpp
+
+    include/logger.hpp 
+    include/databasemanager.hpp 
 )
 
 add_executable(crossword src/main.cpp ${SOURCE_FILES})
