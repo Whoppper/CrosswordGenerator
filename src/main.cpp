@@ -1,4 +1,5 @@
 #include "databasemanager.hpp"
+#include "crosswordmanager.hpp"
 #include "logger.hpp"
 
 #include <QApplication>
@@ -37,6 +38,10 @@ int main(int argc, char *argv[])
     {
         return -1;
     }
+
+    CrosswordManager &crosswordManager = CrosswordManager::getInstance();
+    crosswordManager.createGrid(10, 10);
+    crosswordManager.displayGrid();
 
     app.exec();
     return 0;
