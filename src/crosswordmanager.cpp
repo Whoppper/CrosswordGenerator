@@ -6,6 +6,7 @@
 #include <random> 
 #include <chrono> 
 #include <QDebug>
+#include <QRandomGenerator>
 
 
 namespace
@@ -43,7 +44,33 @@ namespace
     }
 
 
+    QString getWordOnGrid(WordToFind &word, QVector<QString> &grid)
+    {
+        QString letters;
+        int x = word.x();
+        int y = word.y();
+        while (x < grid[0].size() && y < grid.size() && grid[y][x] != CROSSWORD_CELL)
+        {
+            letters.push_back(grid[y][x]);
+            x += word.direction == Direction::Horizontal;
+            y += word.direction == Direction::Vertical;
+            //qDebug() << "coord " << x << " " << y;
+        }
+        //qDebug() << "letters" << letters;
+        return letters;
+    }
 
+    void placeWordOnGrid(WordToFind &word, const QString& wordToTry, QVector<QString> &grid)
+    {
+        int x = word.x();
+        int y = word.y();
+        for (auto &letter : wordToTry) 
+        {
+            grid[y][x] = letter;
+            x += word.direction == Direction::Horizontal;
+            y += word.direction == Direction::Vertical;
+        }
+    }
 
 }
 
@@ -64,7 +91,7 @@ bool CrosswordManager::createGrid(int rows, int cols)
 {
     if (rows <= 4 || cols <= 4)
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Invalid grid dimensions. Rows and columns must be positive.");
+        Logger::getInstance().log(Logger::LogLevel::Error, "Invalid grid dimensions. Rows and columns must be >4.");
         return false;
     }
     grid.clear();
@@ -88,23 +115,23 @@ bool CrosswordManager::createGrid(int rows, int cols)
             if (x == 0 && y == 0)
             {
                 grid[y][x]= CROSSWORD_CELL;
-                words.append(CrosswordCell(x, y));
-                words.back().enableRightWord(Direction::Vertical);
-                words.back().enableDownWord(Direction::Horizontal);
+                crosswordCells.append(CrosswordCell(x, y));
+                crosswordCells.back().enableRightWord(Direction::Vertical);
+                crosswordCells.back().enableDownWord(Direction::Horizontal);
             }
             else if (y == 0 && x % 2 == 0)
             {
                 grid[y][x]= CROSSWORD_CELL;
-                words.append(CrosswordCell(x, y));
-                words.back().enableRightWord(Direction::Vertical);
-                words.back().enableDownWord(Direction::Vertical);
+                crosswordCells.append(CrosswordCell(x, y));
+                crosswordCells.back().enableRightWord(Direction::Vertical);
+                crosswordCells.back().enableDownWord(Direction::Vertical);
             }
             else if (x == 0 && y % 2 == 0)
             {
                 grid[y][x]= CROSSWORD_CELL;
-                words.append(CrosswordCell(x, y));
-                words.back().enableRightWord(Direction::Horizontal);
-                words.back().enableDownWord(Direction::Horizontal);
+                crosswordCells.append(CrosswordCell(x, y));
+                crosswordCells.back().enableRightWord(Direction::Horizontal);
+                crosswordCells.back().enableDownWord(Direction::Horizontal);
             }
             else if (dist(rng) < WORD_DENSITY
                     && isPosValid(x, y, grid) 
@@ -112,16 +139,95 @@ bool CrosswordManager::createGrid(int rows, int cols)
                     && (x != 0 && y != 0)) 
             {
                 grid[y][x]= CROSSWORD_CELL;
-                words.append(CrosswordCell(x, y));
+                crosswordCells.append(CrosswordCell(x, y));
                 if (x != cols - 2)
-                    words.back().enableRightWord(Direction::Horizontal);
+                    crosswordCells.back().enableRightWord(Direction::Horizontal);
                 if (y != rows - 2)
-                    words.back().enableDownWord(Direction::Vertical);
+                    crosswordCells.back().enableDownWord(Direction::Vertical);
             }
         }
     }
     return true;
+}
 
+bool CrosswordManager::backtracking(int index)
+{
+    displayGrid();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    if (duration_ms > MAX_TIME_ALLOWED)
+    {
+        throw std::runtime_error("time limite reached");
+    }
+    if (index == words.size())
+    {
+        displayGrid();
+        throw std::runtime_error("youpi");
+        return true;
+    }
+    WordToFind &wordToFind = words[index];
+    QString letters = getWordOnGrid(wordToFind, grid);
+    //qDebug() << "letters on the grid: " << letters;
+    QList<QString> possibleWords = DatabaseManager::getInstance().searchWordByPattern(letters);
+    if (possibleWords.isEmpty())
+    {
+        //Logger::getInstance().log(Logger::LogLevel::Debug, "Aucun mot possible trouvé, mauvais chemin de backtracking");
+        return false;
+    }
+    std::shuffle(possibleWords.begin(), possibleWords.end(), *QRandomGenerator::global());
+    QVector<QString> gridCpy = grid;
+    for (const QString& word : possibleWords)
+    {
+        qDebug() << "on place le mot: " << word;
+        placeWordOnGrid(wordToFind, word , grid);
+        backtracking(index + 1);
+        grid = gridCpy;
+    }
+    return false;    
+}
+
+void CrosswordManager::generateWords()
+{
+    words.clear();
+    for (CrosswordCell &cwc : crosswordCells)
+    {
+        if (cwc.isRightWordEnable())
+        {
+            words.push_back(cwc.getRightWord());
+        }
+        if (cwc.isDownWordEnable())
+        {
+            words.push_back(cwc.getDownWord());
+        }
+    }
+
+}
+
+bool CrosswordManager::setUpGrid()
+{
+    Logger::getInstance().log(Logger::LogLevel::Debug, "setUpGrid()");
+    start = std::chrono::high_resolution_clock::now();
+    generateWords();
+    try
+    {
+        backtracking(0);
+
+    
+    }
+    catch (const std::exception& e)
+    {
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        Logger::getInstance().log(Logger::LogLevel::Error, "Exception catch. crossword generation failed.");
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("Exécution time : {1} ms").arg(duration_ms));
+        return false;
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    Logger::getInstance().log(Logger::LogLevel::Debug, "backtracting finished. Crossword generation ok.");
+    Logger::getInstance().log(Logger::LogLevel::Debug, QString("Exécution time : {1} ms").arg(duration_ms));
+    return true;
 }
 
 void CrosswordManager::displayGrid()
@@ -130,5 +236,6 @@ void CrosswordManager::displayGrid()
     {
         qDebug() << row;
     }
+    qDebug() << "\n\n";
 }
 

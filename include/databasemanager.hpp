@@ -13,6 +13,7 @@ public:
     bool initializeDatabase(const QString &path);
     bool isEmpty();
     bool fillDB();
+    QList<QString> searchWordByPattern(const QString& userInputPattern);
 
 private:
     DatabaseManager();

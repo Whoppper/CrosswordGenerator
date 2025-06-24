@@ -2,6 +2,6 @@
     <qresource prefix="/">
         <file>data/styles.qss</file>
         <file>data/config.ini</file>
-        <file>data/dico.txt</file>
+        <file>data/dicoClean.txt</file>
     </qresource>
 </RCC>

@@ -2,6 +2,19 @@
 #include "logger.hpp"
 
 #include <QString>
+#include <QRegularExpression>
+
+
+namespace 
+{
+    QString convertUserInputToSqlLikePattern(const QString& userInput)
+    {
+        QString pattern = userInput.trimmed();
+        pattern.replace(QRegularExpression("\\."), "_");
+        return pattern;
+    }
+
+}
 
 
 DatabaseManager::DatabaseManager()
@@ -70,7 +83,7 @@ bool DatabaseManager::isEmpty()
 
 bool DatabaseManager::fillDB()
 {
-    QFile file(":/data/dico.txt");
+    QFile file(":/data/dicoClean.txt");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         Logger::getInstance().log(Logger::LogLevel::Error, "Failed to open words file");
@@ -118,4 +131,42 @@ bool DatabaseManager::fillDB()
         return false;
     }
     return true;
+}
+
+
+QList<QString> DatabaseManager::searchWordByPattern(const QString& userInputPattern)
+{
+    QList<QString> foundWords;
+    if (!db.isOpen())
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, "Database is not open.");
+        return foundWords;
+    }
+
+    QString sqlPattern = convertUserInputToSqlLikePattern(userInputPattern);
+    qDebug() << "sqlPattern: " << sqlPattern;
+    QSqlQuery query(db);
+    QString queryString = QString("SELECT word FROM words WHERE word LIKE :pattern;");
+
+    if (!query.prepare(queryString))
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to prepare search query: " + query.lastError().text());
+        return foundWords;
+    }
+
+    // Binder le motif pour éviter les injections SQL
+    query.bindValue(":pattern", sqlPattern);
+
+    if (!query.exec())
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to execute search query: " + query.lastError().text());
+        return foundWords;
+    }
+
+    while (query.next())
+    {
+        foundWords.append(query.value(0).toString());
+    }
+
+    return foundWords;
 }

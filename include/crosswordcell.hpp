@@ -11,14 +11,17 @@ enum Direction
     };
 
 
-struct WordToFind
+class WordToFind
 {
-    
-    WordToFind() = default;
+    public:
 
+    int x() const { return position.x(); }
+    int y() const { return position.y(); }
+    WordToFind() = default;
     Direction direction;
     QString wordHint;
     bool isEnabled = false;
+    QPoint position;
 };
 
 class CrosswordCell {
@@ -31,16 +34,15 @@ public:
     int x() const { return position.x(); }
     int y() const { return position.y(); }
 
-    void enableRightWord(Direction dir)
-    {
-        wordRight.direction = dir;
-        wordRight.isEnabled = true;
-    }
-    void enableDownWord(Direction dir)
-    {
-        wordDown.direction = dir;
-        wordDown.isEnabled = true;
-    }
+
+    WordToFind getRightWord() {return wordRight;}
+    WordToFind getDownWord() {return wordDown;}
+
+    void enableRightWord(Direction dir);
+    void enableDownWord(Direction dir);
+    bool isDownWordEnable();
+    bool isRightWordEnable();
+
 
 private:
     WordToFind wordRight;

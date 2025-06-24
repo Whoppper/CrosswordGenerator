@@ -40,8 +40,9 @@ int main(int argc, char *argv[])
     }
 
     CrosswordManager &crosswordManager = CrosswordManager::getInstance();
-    crosswordManager.createGrid(10, 10);
+    crosswordManager.createGrid(5, 5);
     crosswordManager.displayGrid();
+    crosswordManager.setUpGrid();
 
     app.exec();
     return 0;
