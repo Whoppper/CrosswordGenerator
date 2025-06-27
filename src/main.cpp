@@ -33,17 +33,19 @@ int main(int argc, char *argv[])
         app.setStyleSheet(styleSheet); 
     }
 
+    
     DatabaseManager &db = DatabaseManager::getInstance();
-    if (!db.initializeDatabase("../dictionary.db"))
+    if (!db.initializeDatabase())
     {
         return -1;
     }
 
     CrosswordManager &crosswordManager = CrosswordManager::getInstance();
-    crosswordManager.createGrid(5, 5);
-    crosswordManager.displayGrid();
-    crosswordManager.setUpGrid();
 
-    app.exec();
+    crosswordManager.createGrid(8, 8);
+    crosswordManager.displayGrid();
+    crosswordManager.startCrosswordGeneration();
+
+    //app.exec();
     return 0;
 }

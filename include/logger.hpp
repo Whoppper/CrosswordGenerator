@@ -4,9 +4,6 @@
 #include <QObject>
 #include <QFile>
 #include <QTextStream>
-#include <QDateTime>
-#include <QDir>
-#include <QSettings>
 
 class Logger : public QObject
 {
@@ -32,7 +29,7 @@ signals:
 
 private:
     QString logDirectory;
-    qint64 maxFileSize;
+    qint64 maxLogSize;
     QFile logFile;
     QTextStream logStream;
 

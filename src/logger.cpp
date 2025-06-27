@@ -1,6 +1,9 @@
 #include "logger.hpp"
-#include <QDebug>
 
+#include <QDebug>
+#include <QDateTime>
+#include <QDir>
+#include <QSettings>
 
 Logger &Logger::getInstance()
 {
@@ -56,7 +59,7 @@ void Logger::rotateLogFile()
     logFile.close();
 
     QString oldFileName = getLogFileName();
-    QString newFileName = oldFileName + "." + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
+    QString newFileName = logDirectory + "old_log_ " + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
 
     if (QFile::exists(newFileName))
     {
@@ -71,7 +74,7 @@ void Logger::rotateLogFile()
 
 QString Logger::getLogFileName()
 {
-    return logDirectory + "/log_" + "_" + QDate::currentDate().toString("yyyyMMdd") + ".log";
+    return logDirectory + "/log_" + QDate::currentDate().toString("yyyyMMdd") + ".log";
 }
 
 void Logger::writeLogMessage(LogLevel level, const QString &message)
@@ -99,7 +102,7 @@ void Logger::writeLogMessage(LogLevel level, const QString &message)
     logStream << logMessage << Qt::endl;
     logStream.flush();
 
-    if (logFile.size() > maxFileSize)
+    if (logFile.size() > maxLogSize)
     {
         rotateLogFile();
     }
@@ -109,4 +112,5 @@ void Logger::loadSettings()
 {
     QSettings settings(":/data/config.ini", QSettings::IniFormat);
     logDirectory = settings.value("Log/logDirectory", "./logs").toString();
+    maxLogSize = settings.value("Log/maxLogSize", 1000000000).toInt();
 }

@@ -5,10 +5,10 @@
 #include <QPoint>
 
 enum Direction
-    {
-        Horizontal,
-        Vertical
-    };
+{
+    Horizontal,
+    Vertical
+};
 
 
 class WordToFind
@@ -19,7 +19,7 @@ class WordToFind
     int y() const { return position.y(); }
     WordToFind() = default;
     Direction direction;
-    QString wordHint;
+    QString hint;
     bool isEnabled = false;
     QPoint position;
 };
@@ -30,11 +30,8 @@ public:
     CrosswordCell(int x, int y) : position(x, y) {}
 
     QPoint pos() const { return position; }
-
     int x() const { return position.x(); }
     int y() const { return position.y(); }
-
-
     WordToFind getRightWord() {return wordRight;}
     WordToFind getDownWord() {return wordDown;}
 

@@ -25,11 +25,13 @@ set(SOURCE_FILES
     src/logger.cpp
     src/crosswordmanager.cpp
     src/crosswordcell.cpp
+    src/wordtree.cpp
 
     include/logger.hpp 
     include/databasemanager.hpp
     include/crosswordmanager.hpp
     include/crosswordcell.hpp
+    include/wordtree.hpp
 )
 
 add_executable(crossword src/main.cpp ${SOURCE_FILES})

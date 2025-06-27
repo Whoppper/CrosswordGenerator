@@ -1,8 +1,11 @@
 #include "databasemanager.hpp"
 #include "logger.hpp"
 
-#include <QString>
 #include <QRegularExpression>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QDebug>
+#include <QSettings>
 
 
 namespace 
@@ -13,9 +16,7 @@ namespace
         pattern.replace(QRegularExpression("\\."), "_");
         return pattern;
     }
-
 }
-
 
 DatabaseManager::DatabaseManager()
 {
@@ -28,8 +29,10 @@ DatabaseManager &DatabaseManager::getInstance()
     return instance;
 }
 
-bool DatabaseManager::initializeDatabase(const QString &path)
+bool DatabaseManager::initializeDatabase()
 {
+    QSettings settings(":/data/config.ini", QSettings::IniFormat);
+    QString path = settings.value("Database/path", "../dictionary.db").toString();
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(path);
 
@@ -134,9 +137,9 @@ bool DatabaseManager::fillDB()
 }
 
 
-QList<QString> DatabaseManager::searchWordByPattern(const QString& userInputPattern)
+QVector<QString> DatabaseManager::searchWordByPattern(const QString& userInputPattern)
 {
-    QList<QString> foundWords;
+    QVector<QString> foundWords;
     if (!db.isOpen())
     {
         Logger::getInstance().log(Logger::LogLevel::Error, "Database is not open.");
@@ -144,7 +147,6 @@ QList<QString> DatabaseManager::searchWordByPattern(const QString& userInputPatt
     }
 
     QString sqlPattern = convertUserInputToSqlLikePattern(userInputPattern);
-    qDebug() << "sqlPattern: " << sqlPattern;
     QSqlQuery query(db);
     QString queryString = QString("SELECT word FROM words WHERE word LIKE :pattern;");
 
@@ -153,8 +155,6 @@ QList<QString> DatabaseManager::searchWordByPattern(const QString& userInputPatt
         Logger::getInstance().log(Logger::LogLevel::Error, "Failed to prepare search query: " + query.lastError().text());
         return foundWords;
     }
-
-    // Binder le motif pour éviter les injections SQL
     query.bindValue(":pattern", sqlPattern);
 
     if (!query.exec())
@@ -169,4 +169,21 @@ QList<QString> DatabaseManager::searchWordByPattern(const QString& userInputPatt
     }
 
     return foundWords;
+}
+
+void DatabaseManager::fillWordsList(QVector<QString> &words)
+{
+    QString queryString = "SELECT word FROM words";
+
+    QSqlQuery query(db);
+    if (!query.exec(queryString))
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to execute search query: " + query.lastError().text());
+        return ;
+    }
+    while (query.next())
+    {
+        QString word = query.value(0).toString();
+        words.push_back(word);
+    }
 }
