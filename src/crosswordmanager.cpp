@@ -149,10 +149,15 @@ bool CrosswordManager::createGrid(int rows, int cols)
     return true;
 }
 
-bool CrosswordManager::backtracking(int index)
+bool CrosswordManager::backtracking(int index, int depth)
 {
     visitedGrids++;
-    //displayGrid();
+    if (depth > maxdepth)
+    {
+        maxdepth = depth;
+        displayGrid();
+    }
+        
     auto end = std::chrono::high_resolution_clock::now();
     auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
@@ -166,6 +171,7 @@ bool CrosswordManager::backtracking(int index)
     if (duration_ms > MAX_TIME_ALLOWED)
     {
         Logger::getInstance().log(Logger::LogLevel::Debug, QString("current word. y:%0  x:%1 ").arg(wordToFind.y()).arg(wordToFind.x()));
+        Logger::getInstance().log(Logger::LogLevel::Debug, QString("max depth:%0").arg(maxdepth));
         throw std::runtime_error("MAX_TIME_ALLOWED reached");
     }
     
@@ -183,7 +189,7 @@ bool CrosswordManager::backtracking(int index)
     for (const QString& word : possibleWords)
     {
         placeWordOnGrid(wordToFind, word);
-        bool result = backtracking(index + 1);
+        bool result = backtracking(index + 1, depth + 1);
         if (result == true)
             return true;
         grid = gridCpy;
@@ -218,7 +224,7 @@ bool CrosswordManager::startCrosswordGeneration()
     visitedGrids = 0;
     try
     {
-        isOk = backtracking(0);
+        isOk = backtracking(0, 0);
     }
     catch (const std::exception& e)
     {
@@ -236,8 +242,11 @@ void CrosswordManager::displayGrid()
     for (auto &row : grid)
     {
         qDebug() << row;
+        Logger::getInstance().log(Logger::LogLevel::Debug, row);
     }
     qDebug() << "\n\n";
+    Logger::getInstance().log(Logger::LogLevel::Debug, "\n\n");
+    
 }
 
 

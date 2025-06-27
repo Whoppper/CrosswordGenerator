@@ -35,16 +35,20 @@ private:
 
     void fillAllWordToFind();
     void createWordsTree();
-    bool backtracking(int index);
+    bool backtracking(int index, int depth);
 
 
     QVector<QString> grid;
     QVector<CrosswordCell> crosswordCells;
     QVector<WordToFind> words;
     WordTree tree;
-    int visitedGrids;
+    
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
+
+        // a virer
+    int maxdepth = 0;
+    int visitedGrids;
 };
 
 #endif // CROSSWORDMANAGER_H
