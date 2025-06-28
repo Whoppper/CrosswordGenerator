@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     CrosswordManager &crosswordManager = CrosswordManager::getInstance();
 
-    crosswordManager.createGrid(8, 8);
+    crosswordManager.createGrid(12, 12);
     crosswordManager.displayGrid();
     crosswordManager.startCrosswordGeneration();
 

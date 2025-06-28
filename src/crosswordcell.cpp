@@ -25,3 +25,12 @@ bool CrosswordCell::isRightWordEnable()
 {
     return wordRight.isEnabled;
 }
+
+bool WordToFind::isPlaced() const
+{
+    return isPlacedOk;
+}
+void WordToFind::setPlaced(bool placed)
+{
+    isPlacedOk = placed;
+}

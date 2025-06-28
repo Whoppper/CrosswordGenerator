@@ -139,9 +139,9 @@ bool CrosswordManager::createGrid(int rows, int cols)
             {
                 grid[y][x]= CROSSWORD_CELL;
                 crosswordCells.append(CrosswordCell(x, y));
-                if (x != cols - 2)
+                if (x < cols - 2)
                     crosswordCells.back().enableRightWord(Direction::Horizontal);
-                if (y != rows - 2)
+                if (y < rows - 2)
                     crosswordCells.back().enableDownWord(Direction::Vertical);
             }
         }
@@ -149,7 +149,7 @@ bool CrosswordManager::createGrid(int rows, int cols)
     return true;
 }
 
-bool CrosswordManager::backtracking(int index, int depth)
+bool CrosswordManager::backtracking(int depth)
 {
     visitedGrids++;
     if (depth > maxdepth)
@@ -160,14 +160,14 @@ bool CrosswordManager::backtracking(int index, int depth)
         
     auto end = std::chrono::high_resolution_clock::now();
     auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-    if (index == words.size())
+    int currentIndex = getNextWordToFindIndex();
+    if (currentIndex == -1)
     {
         displayGrid();
         return true;
     }
 
-    WordToFind &wordToFind = words[index];
+    WordToFind &wordToFind = words[currentIndex];
     if (duration_ms > MAX_TIME_ALLOWED)
     {
         Logger::getInstance().log(Logger::LogLevel::Debug, QString("current word. y:%0  x:%1 ").arg(wordToFind.y()).arg(wordToFind.x()));
@@ -188,12 +188,23 @@ bool CrosswordManager::backtracking(int index, int depth)
     int i = 0;
     for (const QString& word : possibleWords)
     {
+        //if (i++ % 10 == 9)
+        //    return false;
         placeWordOnGrid(wordToFind, word);
-        bool result = backtracking(index + 1, depth + 1);
+        if (!areRemainingWordsPossible()) // Si un des mots restants n'a plus de solution
+        {
+            grid = gridCpy;
+            continue;
+        }
+
+        wordToFind.setPlaced(true);
+        bool result = backtracking(depth + 1);
         if (result == true)
             return true;
         grid = gridCpy;
+        wordToFind.setPlaced(false);
     }
+    Logger::getInstance().log(Logger::LogLevel::Debug, QString("current depth: %0 ").arg(depth));
     return false;    
 }
 
@@ -224,7 +235,7 @@ bool CrosswordManager::startCrosswordGeneration()
     visitedGrids = 0;
     try
     {
-        isOk = backtracking(0, 0);
+        isOk = backtracking(0);
     }
     catch (const std::exception& e)
     {
@@ -260,3 +271,44 @@ void CrosswordManager::createWordsTree()
     }
 }
 
+
+int CrosswordManager::getNextWordToFindIndex()
+{
+    int bestIndex = -1;
+    int minPossibleWords = std::numeric_limits<int>::max(); 
+    int maxIntersections = -1; //TODO avec  calcul heuristique
+
+    for (int i = 0; i < words.size(); ++i)
+    {
+        if (!words[i].isPlaced())
+        {
+            QString currentPattern = getWordOnGrid(words[i]);
+            QVector<QString> possibleWords;
+            tree.findWordsByPattern(currentPattern, possibleWords);
+            int numPossibleWords = possibleWords.size();
+            if (numPossibleWords < minPossibleWords)
+            {
+                minPossibleWords = numPossibleWords;
+                bestIndex = i;
+            }
+        }
+    }
+    return bestIndex;
+}
+
+bool CrosswordManager::areRemainingWordsPossible()
+{
+    for (int i = 0; i < words.size(); ++i)
+    {
+        if (!words[i].isPlaced())
+        {
+            QString currentPattern = getWordOnGrid(words[i]);
+            bool isOk = tree.findAnyWordByPattern(currentPattern);
+            if (isOk == false)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}

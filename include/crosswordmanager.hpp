@@ -11,7 +11,7 @@
 constexpr double WORD_DENSITY = 0.3;
 constexpr char EMPTY_LETTER = '.';
 constexpr char CROSSWORD_CELL= '#';
-constexpr int MAX_TIME_ALLOWED= 20000; //ms
+constexpr int MAX_TIME_ALLOWED= 100000; //ms
 
 class CrosswordManager
 {
@@ -32,10 +32,12 @@ private:
     bool isCrosswordCellPosValid(int x, int y);
     QString getWordOnGrid(const WordToFind &word);
     void placeWordOnGrid(WordToFind &word, const QString& wordToTry);
+    int getNextWordToFindIndex();
+    bool areRemainingWordsPossible();
 
     void fillAllWordToFind();
     void createWordsTree();
-    bool backtracking(int index, int depth);
+    bool backtracking(int depth);
 
 
     QVector<QString> grid;

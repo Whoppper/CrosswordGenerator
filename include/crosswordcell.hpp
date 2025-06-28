@@ -17,11 +17,17 @@ class WordToFind
 
     int x() const { return position.x(); }
     int y() const { return position.y(); }
+    bool isPlaced() const;
+    void setPlaced(bool placed);
+    
     WordToFind() = default;
     Direction direction;
     QString hint;
     bool isEnabled = false;
     QPoint position;
+    bool isPlacedOk = false;
+    
+    
 };
 
 class CrosswordCell {
