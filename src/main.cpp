@@ -11,7 +11,10 @@
 #include <QSettings>
 
 
-void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    Q_UNUSED(type);
+    Q_UNUSED(context);
     if (msg.contains("QSocketNotifier"))
     {
         return;

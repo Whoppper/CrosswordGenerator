@@ -93,7 +93,7 @@ CrosswordManager& CrosswordManager::getInstance()
 
 bool CrosswordManager::createGrid(int rows, int cols)
 {
-    if (rows <= 4 || cols <= 4 && rows % 2 == 0 && cols % 2 == 0)
+    if ((rows <= 4 || cols <= 4 ) && rows % 2 == 0 && cols % 2 == 0)
     {
         Logger::getInstance().log(Logger::LogLevel::Error, "Invalid grid dimensions. Rows and columns must be >4 and even.");
         return false;
@@ -189,11 +189,8 @@ bool CrosswordManager::backtracking(int depth)
 
     std::shuffle(possibleWords.begin(), possibleWords.end(), *QRandomGenerator::global());
     QVector<QString> gridCpy = grid;
-    int i = 0;
     for (const QString& word : possibleWords)
     {
-        //if (i++ % 10 == 9)
-        //    return false;
         placeWordOnGrid(wordToFind, word);
         if (!areRemainingWordsPossible()) // Si un des mots restants n'a plus de solution
         {
@@ -279,16 +276,10 @@ void CrosswordManager::createWordsTree()
 int CrosswordManager::getNextWordToFindIndex()
 {
     int bestIndex = -1;
-    int minPossibleWords = std::numeric_limits<int>::max(); 
-    int maxIntersections = -1;
     QVector<int> cutoffs = {2,3,5,10, 20, 40, 100, 500, std::numeric_limits<int>::max()};
 
     for (int currentCutoff : cutoffs)
     {
-        int minPossibleWordsForThisCutoff = std::numeric_limits<int>::max(); 
-        int bestIndexForThisCutoff = -1;
-        bool foundWordUnderCutoff = false; // Indique si au moins un mot a < currentCutoff solutions
-
         for (int i = 0; i < words.size(); ++i)
         {
             if (!words[i].isPlaced())

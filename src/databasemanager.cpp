@@ -95,7 +95,6 @@ bool DatabaseManager::fillDB()
     }
 
     QTextStream in(&file);
-    int wordsAdded = 0;
 
     if (!db.transaction())
     {

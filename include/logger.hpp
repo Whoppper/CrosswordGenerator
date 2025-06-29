@@ -29,13 +29,14 @@ signals:
 
 private:
     QString logDirectory;
-    qint64 maxLogSize;
+    qint64 maxLogFiles;
     QFile logFile;
     QTextStream logStream;
+    LogLevel minimumLogLevel;
 
     void openLogFile();
     void rotateLogFile();
-    QString getLogFileName();
+    QString getLogFileName(int index);
     Logger();
     void loadSettings();
     void writeLogMessage(LogLevel level, const QString &message);
