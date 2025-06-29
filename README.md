@@ -7,6 +7,7 @@ This project is a C++-based crossword puzzle generator. It allows for the creati
 Prerequisites
 Make sure you have a C++ compiler (e.g., G++) installed on your system.
 
+```
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y build-essential cmake git curl wget unzip zip tar
 sudo apt install -y g++ gcc clang lldb lld
@@ -15,11 +16,12 @@ sudo apt install libssl-dev
 sudo apt install sqlite3 libsqlite3-dev
 sudo apt install sqlitebrowser
 sudo apt install libgtest-dev
-
+```
 Compilation and Execution
 
+```
 mkdir build && cd build
 cmake ..
 make
 ./crossword
-
+```
