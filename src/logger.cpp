@@ -130,10 +130,10 @@ void Logger::writeLogMessage(LogLevel level, const QString &message)
         levelStr = "CRITICAL";
         break;
     }
-    QString threadId = QString::number((qintptr)QThread::currentThreadId());
+    //QString threadId = QString::number((qintptr)QThread::currentThreadId());
     QString logMessage = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz") +
                          " [" + levelStr + "] " +
-                         "[" + threadId + "] " + 
+                       //  "[" + threadId + "] " + 
                          ": " + message;
     logStream << logMessage << Qt::endl;
     logFile.flush();

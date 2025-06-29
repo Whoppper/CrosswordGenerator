@@ -6,44 +6,71 @@
 #include <QSqlError>
 #include <QDebug>
 #include <QSettings>
+#include <QFile>
+#include <QTextStream>
+#include <QThread>
 
-
-namespace 
+DatabaseManager::DatabaseManager(const QString& connectionName, const QString& dbPath, QObject *parent)
+    : QObject(parent),
+      m_connectionName(connectionName),
+      m_dbPath(dbPath)
 {
-    QString convertUserInputToSqlLikePattern(const QString& userInput)
+    if (QSqlDatabase::contains(m_connectionName))
     {
-        QString pattern = userInput.trimmed();
-        pattern.replace(QRegularExpression("\\."), "_");
-        return pattern;
+        m_db = QSqlDatabase::database(m_connectionName);
+        Logger::getInstance().log(Logger::Debug, QString("DatabaseManager '%1': Connexion existante réutilisée pour DB '%2'.").arg(m_connectionName).arg(m_dbPath));
+    }
+    else
+    {
+        m_db = QSqlDatabase::addDatabase("QSQLITE", m_connectionName);
+        m_db.setDatabaseName(m_dbPath);
+        Logger::getInstance().log(Logger::Debug, QString("DatabaseManager '%1': Nouvelle connexion créée pour DB '%2'.").arg(m_connectionName).arg(m_dbPath));
     }
 }
 
-DatabaseManager::DatabaseManager()
+DatabaseManager::~DatabaseManager()
 {
-    
+    closeDatabase();
+    Logger::getInstance().log(Logger::Debug, QString("DatabaseManager '%1' détruit.").arg(m_connectionName));
 }
 
-DatabaseManager &DatabaseManager::getInstance()
+QSqlError DatabaseManager::lastError() const
 {
-    static DatabaseManager instance;
-    return instance;
+    return m_db.lastError();
 }
 
-bool DatabaseManager::initializeDatabase()
+void DatabaseManager::closeDatabase()
 {
-    QSettings settings(":/data/config.ini", QSettings::IniFormat);
-    QString path = settings.value("Database/path", "../dictionary.db").toString();
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(path);
+    if (m_db.isOpen()) {
+        m_db.close();
+        Logger::getInstance().log(Logger::Debug, QString("DatabaseManager '%1': DB fermée.").arg(m_connectionName));
+    }
+    if (QSqlDatabase::contains(m_connectionName)) {
+        QSqlDatabase::removeDatabase(m_connectionName);
+        Logger::getInstance().log(Logger::Debug, QString("DatabaseManager '%1': Connexion DB retirée du pool Qt.").arg(m_connectionName));
+    }
+}
 
-    if (!db.open())
+bool DatabaseManager::openDatabase()
+{
+    if (!m_db.isOpen() && !m_db.open())
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Unable to open database!");
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Impossible d'ouvrir la base de données : %2")
+                                    .arg(m_connectionName).arg(m_db.lastError().text()));
         return false;
     }
+    Logger::getInstance().log(Logger::LogLevel::Info, QString("DatabaseManager '%1': Base de données ouverte avec succès.").arg(m_connectionName));
+    return true;
+}
 
-    QSqlQuery query;
-
+bool DatabaseManager::createTables()
+{
+    if (!m_db.isOpen())
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Impossible de créer les tables, connexion fermée.").arg(m_connectionName));
+        return false;
+    }
+    QSqlQuery query(m_db);
     QString createWordsTable =
     "CREATE TABLE IF NOT EXISTS words ("
     "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -53,27 +80,28 @@ bool DatabaseManager::initializeDatabase()
 
     if (!query.exec(createWordsTable))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to create words table");
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Failed to create words table: %2")
+                                    .arg(m_connectionName).arg(query.lastError().text()));
         return false;
     }
-    if (isEmpty())
-    {
-        if (!fillDB())
-            return false;
-    }
-
+    Logger::getInstance().log(Logger::LogLevel::Debug, QString("DatabaseManager '%1': Table 'words' vérifiée/créée.").arg(m_connectionName));
     return true;
 }
 
 
 bool DatabaseManager::isEmpty()
 {
-    QSqlQuery query(db);
+    if (!m_db.isOpen()) {
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Impossible de vérifier si la DB est vide, connexion fermée.").arg(m_connectionName));
+        return true;
+    }
+    QSqlQuery query(m_db);
     QString countQuery = "SELECT COUNT(*) FROM words;";
 
     if (!query.exec(countQuery))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to execute count query for words table");
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Failed to execute count query for words table: %2")
+                                    .arg(m_connectionName).arg(query.lastError().text()));
         return true;
     }
     if (query.next())
@@ -86,30 +114,35 @@ bool DatabaseManager::isEmpty()
 
 bool DatabaseManager::fillDB()
 {
+    if (!m_db.isOpen())
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Impossible de remplir la DB, connexion fermée.").arg(m_connectionName));
+        return false;
+    }
     QFile file(":/data/dicoClean.txt");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to open words file");
-        db.close();
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Failed to open words file 'dicoClean.txt'.").arg(m_connectionName));
         return false;
     }
 
     QTextStream in(&file);
 
-    if (!db.transaction())
+    if (!m_db.transaction())
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to start database transaction");
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Failed to start database transaction: %2").arg(m_connectionName).arg(m_db.lastError().text()));
         return false;
     }
 
-    QSqlQuery query(db);
-    if (!query.prepare("INSERT OR IGNORE INTO words (word, definition, hint) VALUES (:word, :definition, :hint);")) 
+    QSqlQuery query(m_db);
+    if (!query.prepare("INSERT OR IGNORE INTO words (word, definition, hint) VALUES (:word, :definition, :hint);"))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to prepare insert query");
-        db.rollback();
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Failed to prepare insert query: %2").arg(m_connectionName).arg(query.lastError().text()));
+        m_db.rollback();
         return false;
     }
 
+    int insertedCount = 0;
     while (!in.atEnd())
     {
         QString line = in.readLine().trimmed();
@@ -121,64 +154,41 @@ bool DatabaseManager::fillDB()
 
             if (!query.exec())
             {
-                Logger::getInstance().log(Logger::LogLevel::Warning, QString("Failed to insert word '%1'").arg(line));
+                Logger::getInstance().log(Logger::LogLevel::Warning, QString("DatabaseManager '%1': Failed to insert word '%2': %3")
+                                            .arg(m_connectionName).arg(line).arg(query.lastError().text()));
+            }
+            else
+            {
+                insertedCount++;
             }
         }
     }
 
-    if (!db.commit())
+    if (!m_db.commit())
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to commit database transaction");
-        db.rollback();
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Failed to commit database transaction: %2").arg(m_connectionName).arg(m_db.lastError().text()));
+        m_db.rollback();
         return false;
     }
+    Logger::getInstance().log(Logger::LogLevel::Info, QString("DatabaseManager '%1': %2 mots insérés/ignorés.").arg(m_connectionName).arg(insertedCount));
     return true;
-}
-
-
-QVector<QString> DatabaseManager::searchWordByPattern(const QString& userInputPattern)
-{
-    QVector<QString> foundWords;
-    if (!db.isOpen())
-    {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Database is not open.");
-        return foundWords;
-    }
-
-    QString sqlPattern = convertUserInputToSqlLikePattern(userInputPattern);
-    QSqlQuery query(db);
-    QString queryString = QString("SELECT word FROM words WHERE word LIKE :pattern;");
-
-    if (!query.prepare(queryString))
-    {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to prepare search query: " + query.lastError().text());
-        return foundWords;
-    }
-    query.bindValue(":pattern", sqlPattern);
-
-    if (!query.exec())
-    {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to execute search query: " + query.lastError().text());
-        return foundWords;
-    }
-
-    while (query.next())
-    {
-        foundWords.append(query.value(0).toString());
-    }
-
-    return foundWords;
 }
 
 void DatabaseManager::fillWordsList(QVector<QString> &words)
 {
+    if (!m_db.isOpen())
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Database is not open for filling word list.").arg(m_connectionName));
+        return;
+    }
     QString queryString = "SELECT word FROM words";
 
-    QSqlQuery query(db);
+    QSqlQuery query(m_db);
     if (!query.exec(queryString))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Failed to execute search query: " + query.lastError().text());
-        return ;
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Failed to execute query for filling word list: %2")
+                                    .arg(m_connectionName).arg(query.lastError().text()));
+        return;
     }
     while (query.next())
     {

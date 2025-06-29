@@ -1,23 +1,37 @@
-#ifndef DATABASEMANAGER_H
-#define DATABASEMANAGER_H
+#ifndef DATABASEMANAGER_HPP
+#define DATABASEMANAGER_HPP
 
-#include <QString>
-#include <QVector>
+#include <QObject>
 #include <QSqlDatabase>
+#include <QVector>
+#include <QString>
+#include <QSqlError>
 
-class DatabaseManager
+class DatabaseManager : public QObject
 {
+    Q_OBJECT
+
 public:
-    static DatabaseManager &getInstance();
-    bool initializeDatabase();
+    explicit DatabaseManager(const QString& connectionName, const QString& dbPath, QObject *parent = nullptr);
+    ~DatabaseManager() override;
+
+    bool openDatabase();
+    void closeDatabase();
     bool isEmpty();
-    bool fillDB();
-    QVector<QString> searchWordByPattern(const QString& userInputPattern);
+
     void fillWordsList(QVector<QString> &words);
+    QSqlError lastError() const;
+
+    // à appeler uniquement dans le thread principal
+    bool fillDB();
+    bool createTables();
 
 private:
-    DatabaseManager();
-    QSqlDatabase db;
+    QSqlDatabase m_db;
+    QString m_connectionName;
+    QString m_dbPath;
+
+    Q_DISABLE_COPY(DatabaseManager)
 };
 
-#endif // DATABASEMANAGER_H
+#endif // DATABASEMANAGER_HPP
