@@ -80,12 +80,25 @@ int main(int argc, char *argv[])
 
     GridGenerator gridGenerator; 
 
-    QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, &app, &QCoreApplication::quit);
+    //QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, &app, &QCoreApplication::quit);
+
+    QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, [&](){
+        int nbsuccess = gridGenerator.getNbSuccess();
+        Logger::getInstance().log(Logger::Info, QString("Application terminée. Total de grilles générées collectées : %1").arg(nbsuccess));
+        qDebug() << QString("Application terminée. Total de grilles générées collectées : %1").arg(nbsuccess);
+
+        QTimer::singleShot(1000, [&]()
+        {
+            QCoreApplication::quit();
+        });
+    });
 
     QObject::connect(&gridGenerator, &GridGenerator::generationProgress, [&](int completed){
         Logger::getInstance().log(Logger::Info, QString("Progression du pool : %1 grilles générées.").arg(completed));
         qDebug() << QString("Progression du pool : %1 grilles générées.").arg(completed);
     });
+
+
 
     QTimer::singleShot(0, [&]()
     {
@@ -97,8 +110,7 @@ int main(int argc, char *argv[])
 
     //QVector<GeneratedGridData> finalGrids = gridGenerator.getGeneratedGrids();
     //Logger::getInstance().log(Logger::Info, QString("Application terminée. Total de grilles générées collectées : %1").arg(finalGrids.size()));
-    int nbsuccess = gridGenerator.getNbSuccess();
-    Logger::getInstance().log(Logger::Info, QString("Application terminée. Total de grilles générées collectées : %1").arg(nbsuccess));
-    qDebug() << QString("Application terminée. Total de grilles générées collectées : %1").arg(nbsuccess);
+    
+    
     return 0;
 }

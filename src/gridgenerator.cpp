@@ -47,7 +47,7 @@ void GridGenerator::startGenerationPool()
 
 void GridGenerator::launchNewWorker()
 {
-    QThread* thread = new QThread(this);
+    QThread* thread = new QThread(/*this*/);
     
     GridWorker* worker = new GridWorker(gridSize, dbPath, workerMaxDurationMs);
 
@@ -110,7 +110,7 @@ void GridGenerator::onPoolTimeout()
 
 void GridGenerator::stopAllActiveWorkers()
 {
-  /*  Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Tentative d'arrêt des workers."));
+    Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Tentative d'arrêt des workers."));
     for (auto& pair : runningWorkerPairs)
     {
         QThread* thread = pair.first;
@@ -120,7 +120,7 @@ void GridGenerator::stopAllActiveWorkers()
         }
     }
     runningWorkerPairs.clear();
-    */
+    
 }
 
 
