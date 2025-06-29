@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QFile>
 #include <QTextStream>
+#include <QRecursiveMutex>
 
 class Logger : public QObject
 {
@@ -20,6 +21,7 @@ public:
 
     
     ~Logger();
+    Q_DISABLE_COPY(Logger)
 
     void log(LogLevel level, const QString &message);
     static Logger &getInstance();
@@ -30,9 +32,11 @@ signals:
 private:
     QString logDirectory;
     qint64 maxLogFiles;
+    qint64 logFileSizeLimit;
     QFile logFile;
     QTextStream logStream;
     LogLevel minimumLogLevel;
+    QRecursiveMutex mutex;
 
     void openLogFile();
     void rotateLogFile();

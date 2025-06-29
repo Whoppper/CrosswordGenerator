@@ -9,6 +9,8 @@
 #include <QResource>
 #include <QFileInfo>
 #include <QSettings>
+#include <QTimer>
+#include <QMetaType>
 
 
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -16,7 +18,7 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
     Q_UNUSED(type);
     Q_UNUSED(context);
     #ifdef QT_NO_DEBUG
-        return 
+        return ;
     #endif
     if (msg.contains("QSocketNotifier"))
     {
@@ -28,6 +30,7 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
 int main(int argc, char *argv[])
 {
     qInstallMessageHandler(messageHandler);
+    qRegisterMetaType<Logger::LogLevel>("LogLevel");
 
     QApplication app(argc, argv);
 
@@ -48,10 +51,12 @@ int main(int argc, char *argv[])
 
     CrosswordManager &crosswordManager = CrosswordManager::getInstance();
 
-    crosswordManager.createGrid(10, 10);
-    crosswordManager.displayGrid();
-    crosswordManager.startCrosswordGeneration();
+    QTimer::singleShot(0, [&]()
+    {
+        crosswordManager.createGrid(12, 12);
+        crosswordManager.startCrosswordGeneration();
+    });
 
-    //app.exec();
+    app.exec();
     return 0;
 }
