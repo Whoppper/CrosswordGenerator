@@ -78,13 +78,15 @@ void GridGenerator::launchNewWorker()
 void GridGenerator::onWorkerFinished(const GeneratedGridData& data)
 {
     generatedGrids.append(data);
+    if (data.success == true)
+        nbSuccess++;
 
     Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé (grilles générées: %1). Succès: %2, Thread ID: %3")
                                 .arg(generatedGrids.size())
                                 .arg(data.success ? "Oui" : "Non")
                                 .arg(data.workerThreadId));
 
-    emit generationProgress(generatedGrids.size());
+    emit generationProgress(nbSuccess);
 
      Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé"));
 
@@ -108,7 +110,7 @@ void GridGenerator::onPoolTimeout()
 
 void GridGenerator::stopAllActiveWorkers()
 {
-    Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Tentative d'arrêt des workers."));
+  /*  Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Tentative d'arrêt des workers."));
     for (auto& pair : runningWorkerPairs)
     {
         QThread* thread = pair.first;
@@ -118,10 +120,16 @@ void GridGenerator::stopAllActiveWorkers()
         }
     }
     runningWorkerPairs.clear();
+    */
 }
 
 
 QVector<GeneratedGridData> GridGenerator::getGeneratedGrids() const
 {
     return generatedGrids;
+}
+
+int GridGenerator::getNbSuccess() const 
+{
+    return nbSuccess;
 }

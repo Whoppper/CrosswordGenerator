@@ -20,6 +20,7 @@ public:
     explicit GridGenerator(QObject *parent = nullptr);
     void startGenerationPool();
     QVector<GeneratedGridData> getGeneratedGrids() const;
+    int getNbSuccess() const ;
 
 signals:
 
@@ -45,6 +46,7 @@ private:
     QTimer poolTimer;
     QList<QPair<QThread*, GridWorker*>> runningWorkerPairs;
     QVector<GeneratedGridData> generatedGrids;
+    int nbSuccess = 0;
 };
 
 #endif // GRIDGENERATOR_HPP

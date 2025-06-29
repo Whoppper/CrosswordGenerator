@@ -248,6 +248,10 @@ QString CrosswordManager::startCrosswordGeneration()
     Logger::getInstance().log(Logger::LogLevel::Info, QString("Exécution time : %0 ms").arg(duration_ms));
     Logger::getInstance().log(Logger::LogLevel::Info, QString("Visited grids : %0 ").arg(visitedGrids));
     displayGrid(Logger::LogLevel::Info);
+    if (isOk)
+    {
+        return QString("success");
+    }
     return QString();
 }
 
@@ -255,10 +259,10 @@ void CrosswordManager::displayGrid(Logger::LogLevel level)
 {
     for (auto &row : grid)
     {
-        //qDebug() << qPrintable(row);
+        qDebug() << qPrintable(row);
         Logger::getInstance().log(level, row);
     }
-    //qDebug() << "";
+    qDebug() << "";
     Logger::getInstance().log(level, "\n");
     
 }
