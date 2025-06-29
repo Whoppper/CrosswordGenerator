@@ -1,26 +1,60 @@
 #include "gridworker.hpp"
 #include "logger.hpp"
-#include <QDateTime>
-#include <QThread>
+#include "crosswordmanager.hpp"
+#include "databasemanager.hpp"
 
-GridWorker::GridWorker(QObject *parent)
-    : QObject(parent)
+#include <QThread>
+#include <QDateTime>
+
+
+GridWorker::GridWorker(const QSize& workerGridSize, const QString& dbPath, int workerDurationMs, QObject *parent)
+    : QObject(parent),
+      m_gridSize(gridSize),
+      m_dbFilePath(dbFilePath),
+      m_durationMs(workerDurationMs)
 {
 
 }
 
 void GridWorker::doWork()
 {
-    QString result = "failed";
-    Logger::getInstance().log(Logger::Info, QString("Worker (Thread ID: %1) démarré.")
-                                .arg((qintptr)QThread::currentThreadId()));
 
-   
+    QString currentThreadId = QString::number((qintptr)QThread::currentThreadId());
 
-                          
-    Logger::getInstance().log(Logger::Info, QString("Worker (Thread ID: %1) terminé : %2")
-                                .arg((qintptr)QThread::currentThreadId())
-                                .arg(result));
+    Logger::getInstance().log(Logger::Info, QString("GridWorker (Thread ID: %1): Démarré pour générer une grille %2x%3.")
+                                .arg(currentThreadId)
+                                .arg(m_gridSize.width())
+                                .arg(m_gridSize.height()));
 
-    //emit gridGenerationFinished(generationSuccessful, result);
+    QString dbConnectionName = "WorkerDbConn_" + currentThreadId;
+    DatabaseManager dbManager(dbConnectionName, m_dbFilePath, this);
+
+
+    if (!dbManager.openDatabase())
+    {
+        Logger::getInstance().log(Logger::Error, QString("GridWorker (Thread ID: %1): Impossible d'ouvrir la base de données. Erreur: %2")
+                                    .arg(currentThreadId).arg(dbManager.lastError().text()));
+        GeneratedGridData failureData = {m_gridSize, "DB_CONNECTION_FAILED", false, currentThreadId};
+        emit gridGenerationFinished(failureData);
+        return;
+    }
+    Logger::getInstance().log(Logger::Info, QString("GridWorker (Thread ID: %1): Base de données ouverte avec succès.").arg(currentThreadId));
+
+
+    CrosswordManager crosswordManager(&dbManager,m_durationMs, this);
+
+    QString generatedContent = crosswordManager.generateGrid(m_gridSize);
+
+
+    bool generationSuccess = !generatedContent.isEmpty();
+
+    Logger::getInstance().log(Logger::Info, QString("GridWorker (Thread ID: %1): Fin de génération pour grille %2x%3. Succès: %4.")
+                                .arg(currentThreadId)
+                                .arg(m_gridSize.width())
+                                .arg(m_gridSize.height())
+                                .arg(generationSuccess ? "Oui" : "Non"));
+
+    GeneratedGridData resultData = {m_gridSize, generatedContent, generationSuccess, currentThreadId};
+    emit gridGenerationFinished(resultData);
+
 }

@@ -26,7 +26,7 @@ signals:
 
 private slots:
 
-    void onWorkerFinished(/*const GeneratedGridData& data*/);
+    void onWorkerFinished(const GeneratedGridData& data);
     void onPoolTimeout();
 
 private:

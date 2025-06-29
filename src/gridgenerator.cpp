@@ -67,16 +67,16 @@ void GridGenerator::launchNewWorker()
     Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Nouveau worker lancé.");
 }
 
-void GridGenerator::onWorkerFinished(/*const GeneratedGridData& data*/)
+void GridGenerator::onWorkerFinished(const GeneratedGridData& data)
 {
-    /*generatedGrids.append(data);
+    generatedGrids.append(data);
 
     Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé (grilles générées: %1). Succès: %2, Thread ID: %3")
                                 .arg(generatedGrids.size())
                                 .arg(data.success ? "Oui" : "Non")
                                 .arg(data.workerThreadId));
 
-    emit generationProgress(generatedGrids.size());*/
+    emit generationProgress(generatedGrids.size());
 
      Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé");
 

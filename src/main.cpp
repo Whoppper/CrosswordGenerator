@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 {
     qInstallMessageHandler(messageHandler);
     qRegisterMetaType<Logger::LogLevel>("LogLevel");
+    qRegisterMetaType<GeneratedGridData>("GeneratedGridData");
 
     Logger::getInstance();
 
