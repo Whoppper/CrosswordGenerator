@@ -1,7 +1,6 @@
 #include "crosswordmanager.hpp"
 #include "databasemanager.hpp"
 #include "crosswordcell.hpp"
-#include "logger.hpp"
 
 #include <random> 
 #include <chrono>
@@ -154,6 +153,16 @@ bool CrosswordManager::createGrid(int rows, int cols)
 
 
 
+
+
+
+
+
+
+
+
+
+
 bool CrosswordManager::backtracking(int depth)
 {
     visitedGrids++;
@@ -249,15 +258,15 @@ bool CrosswordManager::startCrosswordGeneration()
     return isOk;
 }
 
-void CrosswordManager::displayGrid()
+void CrosswordManager::displayGrid(Logger::LogLevel level)
 {
     for (auto &row : grid)
     {
-        qDebug() << row;
-        Logger::getInstance().log(Logger::LogLevel::Debug, row);
+        qDebug() << qPrintable(row);
+        Logger::getInstance().log(level, row);
     }
-    qDebug() << "\n\n";
-    Logger::getInstance().log(Logger::LogLevel::Debug, "\n\n");
+    qDebug() << "";
+    Logger::getInstance().log(level, "\n");
     
 }
 

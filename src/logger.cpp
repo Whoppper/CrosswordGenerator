@@ -16,7 +16,7 @@ Logger::Logger()
     loadSettings();
 
     #ifdef QT_NO_DEBUG
-        minimumLogLevel = Warning;
+        minimumLogLevel = Info;
     #else
         minimumLogLevel = Debug;
     #endif

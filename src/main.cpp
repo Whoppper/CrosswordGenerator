@@ -15,6 +15,9 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
 {
     Q_UNUSED(type);
     Q_UNUSED(context);
+    #ifdef QT_NO_DEBUG
+        return 
+    #endif
     if (msg.contains("QSocketNotifier"))
     {
         return;

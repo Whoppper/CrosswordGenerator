@@ -3,6 +3,7 @@
 
 #include "crosswordcell.hpp"
 #include "wordtree.hpp"
+#include "logger.hpp"
 
 #include <QVector>
 #include <QString>
@@ -19,7 +20,7 @@ public:
 
     static CrosswordManager &getInstance();
     bool createGrid(int rows, int cols);
-    void displayGrid();
+    void displayGrid(Logger::LogLevel level=Logger::LogLevel::Debug);
     const QVector<QString>& getGrid() const { return grid; }
     bool startCrosswordGeneration();
     
