@@ -11,6 +11,7 @@ GridGenerator::GridGenerator(QObject *parent)
     
     connect(&poolTimer, &QTimer::timeout, this, &GridGenerator::onPoolTimeout);
 
+    QSettings settings(":/data/config.ini", QSettings::IniFormat);
     gridSize.setWidth(settings.value("Crossword/gridCols", 10).toInt());
     gridSize.setHeight(settings.value("Crossword/gridRows", 10).toInt());
     workerMaxDurationMs = settings.value("Thread/WorkerMaxDurationMs", 30000).toInt();
@@ -32,7 +33,7 @@ void GridGenerator::startGenerationPool()
     generatedGrids.clear();
     runningWorkerPairs.clear();
 
-    for (int i = 0; i < m_initialWorkersCount; ++i)
+    for (int i = 0; i < nbWorkers; ++i)
     {
         launchNewWorker();
     }
@@ -63,8 +64,8 @@ void GridGenerator::launchNewWorker()
 
 
     thread->start();
-    runningWorkerPairs.append({thread, worker});.
-    Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Nouveau worker lancé.");
+    runningWorkerPairs.append({thread, worker});
+    Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Nouveau worker lancé."));
 }
 
 void GridGenerator::onWorkerFinished(const GeneratedGridData& data)
@@ -78,7 +79,7 @@ void GridGenerator::onWorkerFinished(const GeneratedGridData& data)
 
     emit generationProgress(generatedGrids.size());
 
-     Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé");
+     Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé"));
 
      if (poolTimer.isActive())
      { 

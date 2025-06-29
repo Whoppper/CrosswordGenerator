@@ -1,6 +1,8 @@
 #include "databasemanager.hpp"
 #include "crosswordmanager.hpp"
 #include "logger.hpp"
+#include "gridworker.hpp"
+#include "gridgenerator.hpp"
 
 #include <QApplication>
 #include <QFile>
@@ -76,16 +78,7 @@ int main(int argc, char *argv[])
     }
 
 
-
-    /*CrosswordManager &crosswordManager = CrosswordManager::getInstance();
-
-    QTimer::singleShot(0, [&]()
-    {
-        crosswordManager.createGrid(12, 12);
-        crosswordManager.startCrosswordGeneration();
-    });*/
-
-    GridGenerator gridGenerator(); 
+    GridGenerator gridGenerator; 
 
     QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, &app, &QCoreApplication::quit);
 
@@ -96,14 +89,13 @@ int main(int argc, char *argv[])
     QTimer::singleShot(0, [&]()
     {
         Logger::getInstance().log(Logger::Info, "Démarrage des opérations via QTimer::singleShot.");
-        gridGenerator.startGenerationPool(15000, 5, QSize(10, 10));
+        gridGenerator.startGenerationPool();
     });
 
-    int exitCode = app.exec();
+    app.exec();
 
     QVector<GeneratedGridData> finalGrids = gridGenerator.getGeneratedGrids();
     Logger::getInstance().log(Logger::Info, QString("Application terminée. Total de grilles générées collectées : %1").arg(finalGrids.size()));
 
-    app.exec();
     return 0;
 }

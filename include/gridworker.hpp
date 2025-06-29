@@ -21,7 +21,7 @@ class GridWorker : public QObject
 {
     Q_OBJECT
 public:
-    explicit GridWorker(const QSize& gridSize, const QString& dbFilePath, int workerDurationMs, QObject *parent = nullptr);
+    explicit GridWorker(const QSize& workerGridSize, const QString& dbFilePath, int workerDurationMs, QObject *parent = nullptr);
 
 public slots:
 
@@ -31,9 +31,9 @@ signals:
     void gridGenerationFinished(const GeneratedGridData& data);
 
 private:
-    QSize m_gridSize;
-    QString m_dbFilePath;
-    int m_durationMs;
+    QSize gridSize;
+    QString dbFilePath;
+    int durationMs;
 };
 
 #endif // GRIDWORKER_HPP

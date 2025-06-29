@@ -7,26 +7,25 @@
 
 #include <QVector>
 #include <QString>
+#include <QThread>
 #include <chrono>
 
 constexpr double WORD_DENSITY = 0.3;
 constexpr char EMPTY_LETTER = '.';
 constexpr char CROSSWORD_CELL= '#';
-constexpr int MAX_TIME_ALLOWED= 30000; //ms
 
-class CrosswordManager
+class DatabaseManager;
+
+class CrosswordManager : public QObject
 {
+    Q_OBJECT
 public:
-
-    static CrosswordManager &getInstance();
-    bool createGrid(int rows, int cols);
-    void displayGrid(Logger::LogLevel level=Logger::LogLevel::Debug);
-    const QVector<QString>& getGrid() const { return grid; }
-    bool startCrosswordGeneration();
-    
+    explicit CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QObject *parent = nullptr);
+    bool generateGrid(int rows, int cols);
+    QString startCrosswordGeneration();
 private:
 
-    explicit CrosswordManager();
+    
     CrosswordManager(const CrosswordManager&) = delete;
     CrosswordManager& operator=(const CrosswordManager&) = delete;
 
@@ -39,13 +38,15 @@ private:
     void fillAllWordToFind();
     void createWordsTree();
     bool backtracking(int depth);
+    void displayGrid(Logger::LogLevel level=Logger::LogLevel::Debug);
 
 
     QVector<QString> grid;
     QVector<CrosswordCell> crosswordCells;
     QVector<WordToFind> words;
     WordTree tree;
-    
+    DatabaseManager* dbManager;
+    int maxDurationMs;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
 

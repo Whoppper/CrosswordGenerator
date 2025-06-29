@@ -61,6 +61,7 @@ set(SOURCE_FILES
     src/crosswordcell.cpp
     src/wordtree.cpp
     src/gridworker.cpp
+    src/gridgenerator.cpp
 
     include/logger.hpp 
     include/databasemanager.hpp
@@ -68,6 +69,7 @@ set(SOURCE_FILES
     include/crosswordcell.hpp
     include/wordtree.hpp
     include/gridworker.hpp
+    include/gridgenerator.hpp
 )
 
 add_executable(crossword src/main.cpp ${SOURCE_FILES})

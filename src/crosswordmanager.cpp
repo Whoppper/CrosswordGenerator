@@ -77,20 +77,23 @@ void CrosswordManager::placeWordOnGrid(WordToFind &word, const QString& wordToTr
 
 
 
-CrosswordManager::CrosswordManager()
+CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QObject *parent)
+    : QObject(parent),
+      dbManager(_dbManager),
+      maxDurationMs(_maxDurationMs)
 {
-
+    if (!dbManager)
+    {
+        Logger::getInstance().log(Logger::Critical, "CrosswordManager créé sans DatabaseManager valide !");
+    }
+    Logger::getInstance().log(Logger::Debug, QString("CrosswordManager créé dans thread ID: %1 avec durée max: %2ms.")
+                                .arg((qintptr)QThread::currentThreadId())
+                                .arg(maxDurationMs));
 }
 
-CrosswordManager& CrosswordManager::getInstance()
-{
-    static CrosswordManager instance;
-    return instance;
-}
 
 
-
-bool CrosswordManager::createGrid(int rows, int cols)
+bool CrosswordManager::generateGrid(int rows, int cols)
 {
     if ((rows <= 4 || cols <= 4 ) && rows % 2 == 0 && cols % 2 == 0)
     {
@@ -153,16 +156,6 @@ bool CrosswordManager::createGrid(int rows, int cols)
 
 
 
-
-
-
-
-
-
-
-
-
-
 bool CrosswordManager::backtracking(int depth)
 {
     visitedGrids++;
@@ -181,11 +174,11 @@ bool CrosswordManager::backtracking(int depth)
     }
 
     WordToFind &wordToFind = words[currentIndex];
-    if (duration_ms > MAX_TIME_ALLOWED)
+    if (duration_ms > maxDurationMs)
     {
         Logger::getInstance().log(Logger::LogLevel::Debug, QString("current word. y:%0  x:%1 ").arg(wordToFind.y()).arg(wordToFind.x()));
         Logger::getInstance().log(Logger::LogLevel::Debug, QString("max depth:%0").arg(maxdepth));
-        throw std::runtime_error("MAX_TIME_ALLOWED reached");
+        throw std::runtime_error("maxDurationMs reached");
     }
     
     QString letters = getWordOnGrid(wordToFind);
@@ -234,7 +227,7 @@ void CrosswordManager::fillAllWordToFind()
 
 }
 
-bool CrosswordManager::startCrosswordGeneration()
+QString CrosswordManager::startCrosswordGeneration()
 {
     bool isOk = false;
     Logger::getInstance().log(Logger::LogLevel::Debug, "startCrosswordGeneration()");
@@ -255,7 +248,7 @@ bool CrosswordManager::startCrosswordGeneration()
     Logger::getInstance().log(Logger::LogLevel::Info, QString("Exécution time : %0 ms").arg(duration_ms));
     Logger::getInstance().log(Logger::LogLevel::Info, QString("Visited grids : %0 ").arg(visitedGrids));
     displayGrid(Logger::LogLevel::Info);
-    return isOk;
+    return QString();
 }
 
 void CrosswordManager::displayGrid(Logger::LogLevel level)
@@ -274,7 +267,7 @@ void CrosswordManager::displayGrid(Logger::LogLevel level)
 void CrosswordManager::createWordsTree()
 {
     QVector<QString> allWords;
-    DatabaseManager::getInstance().fillWordsList(allWords);
+    dbManager->fillWordsList(allWords);
     for (const QString &word : allWords)
     {
         tree.insert(word);
