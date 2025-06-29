@@ -63,6 +63,13 @@ void GridGenerator::launchNewWorker()
     connect(this, &QObject::destroyed, worker, &QObject::deleteLater);
 
 
+    connect(thread, &QThread::finished, this, [this, thread, worker]() {
+        runningWorkerPairs.removeOne({thread, worker});
+        Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Paire Thread/Worker (%1/%2) retirée de la liste de suivi.")
+                                    .arg((qintptr)thread).arg((qintptr)worker));
+    });
+
+
     thread->start();
     runningWorkerPairs.append({thread, worker});
     Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Nouveau worker lancé."));

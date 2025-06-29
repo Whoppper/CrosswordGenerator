@@ -162,7 +162,7 @@ bool CrosswordManager::backtracking(int depth)
     if (depth > maxdepth)
     {
         maxdepth = depth;
-        displayGrid();
+        //displayGrid();
     }
         
     auto end = std::chrono::high_resolution_clock::now();
@@ -255,10 +255,10 @@ void CrosswordManager::displayGrid(Logger::LogLevel level)
 {
     for (auto &row : grid)
     {
-        qDebug() << qPrintable(row);
+        //qDebug() << qPrintable(row);
         Logger::getInstance().log(level, row);
     }
-    qDebug() << "";
+    //qDebug() << "";
     Logger::getInstance().log(level, "\n");
     
 }

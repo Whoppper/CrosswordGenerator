@@ -27,13 +27,13 @@ void GridWorker::doWork()
                                 .arg(gridSize.height()));
 
     QString dbConnectionName = "WorkerDbConn_" + currentThreadId;
-    DatabaseManager dbManager(dbConnectionName, dbFilePath, this);
+    dbManager = new DatabaseManager (dbConnectionName, dbFilePath, this);
 
 
-    if (!dbManager.openDatabase())
+    if (!dbManager->openDatabase())
     {
         Logger::getInstance().log(Logger::Error, QString("GridWorker (Thread ID: %1): Impossible d'ouvrir la base de données. Erreur: %2")
-                                    .arg(currentThreadId).arg(dbManager.lastError().text()));
+                                    .arg(currentThreadId).arg(dbManager->lastError().text()));
         GeneratedGridData failureData = {gridSize, "DB_CONNECTION_FAILED", false, currentThreadId};
         emit gridGenerationFinished(failureData);
         return;
@@ -41,7 +41,7 @@ void GridWorker::doWork()
     Logger::getInstance().log(Logger::Info, QString("GridWorker (Thread ID: %1): Base de données ouverte avec succès.").arg(currentThreadId));
 
 
-    CrosswordManager crosswordManager(&dbManager,durationMs, this);
+    CrosswordManager crosswordManager(dbManager,durationMs, this);
 
     bool ok = crosswordManager.generateGrid(gridSize.height(), gridSize.height());
     QString generatedContent;

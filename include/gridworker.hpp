@@ -6,6 +6,8 @@
 #include <QString>
 #include <QVariant>
 
+class DatabaseManager;
+
 
 struct GeneratedGridData
 {
@@ -34,6 +36,9 @@ private:
     QSize gridSize;
     QString dbFilePath;
     int durationMs;
+    DatabaseManager* dbManager;
+
+    Q_DISABLE_COPY(GridWorker)
 };
 
 #endif // GRIDWORKER_HPP

@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
     
     QSettings settings(":/data/config.ini", QSettings::IniFormat);
-    QString DBPath = settings.value(DBPath, "../dictionary.db").toString();
+    QString DBPath = settings.value("Database/DBPath", "../dictionary.db").toString();
     DatabaseManager mainDbManager("MainThreadConnection", DBPath);
     if (!mainDbManager.openDatabase())
     {
