@@ -4,7 +4,8 @@
 #include "logger.hpp"
 
 #include <random> 
-#include <chrono> 
+#include <chrono>
+#include <limits>
 #include <QDebug>
 #include <QRandomGenerator>
 
@@ -149,6 +150,10 @@ bool CrosswordManager::createGrid(int rows, int cols)
     return true;
 }
 
+
+
+
+
 bool CrosswordManager::backtracking(int depth)
 {
     visitedGrids++;
@@ -174,7 +179,6 @@ bool CrosswordManager::backtracking(int depth)
         Logger::getInstance().log(Logger::LogLevel::Debug, QString("max depth:%0").arg(maxdepth));
         throw std::runtime_error("MAX_TIME_ALLOWED reached");
     }
-    
     
     QString letters = getWordOnGrid(wordToFind);
 
@@ -204,7 +208,7 @@ bool CrosswordManager::backtracking(int depth)
         grid = gridCpy;
         wordToFind.setPlaced(false);
     }
-    Logger::getInstance().log(Logger::LogLevel::Debug, QString("current depth: %0 ").arg(depth));
+    //Logger::getInstance().log(Logger::LogLevel::Debug, QString("current depth: %0 ").arg(depth));
     return false;    
 }
 
@@ -276,20 +280,26 @@ int CrosswordManager::getNextWordToFindIndex()
 {
     int bestIndex = -1;
     int minPossibleWords = std::numeric_limits<int>::max(); 
-    int maxIntersections = -1; //TODO avec  calcul heuristique
+    int maxIntersections = -1;
+    QVector<int> cutoffs = {2,3,5,10, 20, 40, 100, 500, std::numeric_limits<int>::max()};
 
-    for (int i = 0; i < words.size(); ++i)
+    for (int currentCutoff : cutoffs)
     {
-        if (!words[i].isPlaced())
+        int minPossibleWordsForThisCutoff = std::numeric_limits<int>::max(); 
+        int bestIndexForThisCutoff = -1;
+        bool foundWordUnderCutoff = false; // Indique si au moins un mot a < currentCutoff solutions
+
+        for (int i = 0; i < words.size(); ++i)
         {
-            QString currentPattern = getWordOnGrid(words[i]);
-            QVector<QString> possibleWords;
-            tree.findWordsByPattern(currentPattern, possibleWords);
-            int numPossibleWords = possibleWords.size();
-            if (numPossibleWords < minPossibleWords)
+            if (!words[i].isPlaced())
             {
-                minPossibleWords = numPossibleWords;
-                bestIndex = i;
+                QString currentPattern = getWordOnGrid(words[i]);
+                int numPossibleWords = tree.countWordsByPattern(currentPattern, currentCutoff);
+
+                if (numPossibleWords < currentCutoff)
+                {
+                    return i;
+                }
             }
         }
     }

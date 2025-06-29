@@ -46,3 +46,5 @@ target_link_libraries(crossword Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Sql)
 #target_link_libraries(crosswordTests PRIVATE GTest::GTest GTest::Main pthread Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Sql
 
 #add_test(NAME crosswordTests COMMAND crosswordTests)
+
+# perf report --sort=comm,dso,symbol -i perf.data > mon_rapport_perf.txt

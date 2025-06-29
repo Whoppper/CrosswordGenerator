@@ -11,7 +11,7 @@
 constexpr double WORD_DENSITY = 0.3;
 constexpr char EMPTY_LETTER = '.';
 constexpr char CROSSWORD_CELL= '#';
-constexpr int MAX_TIME_ALLOWED= 100000; //ms
+constexpr int MAX_TIME_ALLOWED= 30000; //ms
 
 class CrosswordManager
 {

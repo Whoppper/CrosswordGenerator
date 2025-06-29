@@ -185,3 +185,52 @@ bool WordTree::findAnyWordByPatternRecursive(TreeNode* node, const QString& patt
     }
     return false;
 }
+
+
+int WordTree::countWordsByPattern(const QString& pattern, int maxCount) const
+{
+    int count = 0;
+    countWordsByPatternRecursive(root, pattern, 0, maxCount, count);
+    return count;
+}
+
+int WordTree::countWordsByPatternRecursive(TreeNode* node, const QString& pattern, int index, int maxCount, int& currentCount) const
+{
+    if (currentCount >= maxCount || node == nullptr)
+    {
+        return currentCount;
+    }
+
+    if (index == pattern.length())
+    {
+        if (node->isEndOfWord)
+        {
+            currentCount++;
+        }
+        return currentCount;
+    }
+
+    QChar patternChar = pattern.at(index);
+
+    if (patternChar == '.')
+    {
+        for (auto it = node->children.constBegin(); it != node->children.constEnd(); ++it)
+        {
+            TreeNode* childNode = it.value();
+            countWordsByPatternRecursive(childNode, pattern, index + 1, maxCount, currentCount); 
+            if (currentCount >= maxCount)
+            {
+                return currentCount;
+            }
+        }
+    }
+    else
+    {
+        if (node->children.contains(patternChar))
+        {
+            TreeNode* childNode = node->children.value(patternChar);
+            countWordsByPatternRecursive(childNode, pattern, index + 1, maxCount, currentCount);
+        }
+    }
+    return currentCount;
+}
