@@ -57,10 +57,11 @@ void GridGenerator::launchNewWorker()
     connect(worker, &GridWorker::gridGenerationFinished, this, &GridGenerator::onWorkerFinished);
     connect(worker, &GridWorker::gridGenerationFinished, thread, &QThread::quit);
     connect(worker, &GridWorker::gridGenerationFinished, worker, &QObject::deleteLater);
-    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-
+    
     connect(this, &QObject::destroyed, thread, &QThread::quit);
     connect(this, &QObject::destroyed, worker, &QObject::deleteLater);
+
+    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
 
 
     connect(thread, &QThread::finished, this, [this, thread, worker]() {

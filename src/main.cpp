@@ -77,7 +77,6 @@ int main(int argc, char *argv[])
         Logger::getInstance().log(Logger::Info, "Main thread: La base de données contient déjà des données. Saut du remplissage.");
     }
 
-
     GridGenerator gridGenerator; 
 
     //QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, &app, &QCoreApplication::quit);

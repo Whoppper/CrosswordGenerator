@@ -54,6 +54,11 @@ void GridWorker::doWork()
          Logger::getInstance().log(Logger::Info, QString("GridWorker (Thread ID: %1): Impossible de créer la grille.")
                                 .arg(currentThreadId));
     }
+
+    // peut etre pas necessaire mais ça fait pas de mal
+    dbManager->closeDatabase();
+    Logger::getInstance().log(Logger::Info, QString("GridWorker (Thread ID: %1): Base de données fermée explicitement.").arg(currentThreadId));
+
     
 
     bool generationSuccess = !generatedContent.isEmpty();

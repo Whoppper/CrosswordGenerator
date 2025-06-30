@@ -45,6 +45,7 @@ void DatabaseManager::closeDatabase()
         m_db.close();
         Logger::getInstance().log(Logger::Debug, QString("DatabaseManager '%1': DB fermée.").arg(m_connectionName));
     }
+    m_db = QSqlDatabase();
     if (QSqlDatabase::contains(m_connectionName)) {
         QSqlDatabase::removeDatabase(m_connectionName);
         Logger::getInstance().log(Logger::Debug, QString("DatabaseManager '%1': Connexion DB retirée du pool Qt.").arg(m_connectionName));
