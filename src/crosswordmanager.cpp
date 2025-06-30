@@ -162,7 +162,6 @@ bool CrosswordManager::backtracking(int depth)
     if (depth > maxdepth)
     {
         maxdepth = depth;
-        //displayGrid();
     }
         
     auto end = std::chrono::high_resolution_clock::now();
@@ -206,7 +205,6 @@ bool CrosswordManager::backtracking(int depth)
         grid = gridCpy;
         wordToFind.setPlaced(false);
     }
-    //Logger::getInstance().log(Logger::LogLevel::Debug, QString("current depth: %0 ").arg(depth));
     return false;    
 }
 
@@ -244,10 +242,10 @@ QString CrosswordManager::startCrosswordGeneration()
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    Logger::getInstance().log(Logger::LogLevel::Info, QString("backtracting finished. success: %0.").arg((int)isOk));
-    Logger::getInstance().log(Logger::LogLevel::Info, QString("Exécution time : %0 ms").arg(duration_ms));
-    Logger::getInstance().log(Logger::LogLevel::Info, QString("Visited grids : %0 ").arg(visitedGrids));
-    displayGrid(Logger::LogLevel::Info);
+    Logger::getInstance().log(Logger::LogLevel::Debug, QString("backtracting finished. success: %0.").arg((int)isOk));
+    Logger::getInstance().log(Logger::LogLevel::Debug, QString("Exécution time : %0 ms").arg(duration_ms));
+    Logger::getInstance().log(Logger::LogLevel::Debug, QString("Visited grids : %0 ").arg(visitedGrids));
+    displayGrid(Logger::LogLevel::Debug);
     if (isOk)
     {
         return QString("success");

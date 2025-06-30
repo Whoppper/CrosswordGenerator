@@ -79,8 +79,6 @@ int main(int argc, char *argv[])
 
     GridGenerator gridGenerator; 
 
-    //QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, &app, &QCoreApplication::quit);
-
     QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, [&](){
         int nbsuccess = gridGenerator.getNbSuccess();
         Logger::getInstance().log(Logger::Info, QString("Application terminée. Total de grilles générées collectées : %1").arg(nbsuccess));
@@ -106,10 +104,6 @@ int main(int argc, char *argv[])
     });
 
     app.exec();
-
-    //QVector<GeneratedGridData> finalGrids = gridGenerator.getGeneratedGrids();
-    //Logger::getInstance().log(Logger::Info, QString("Application terminée. Total de grilles générées collectées : %1").arg(finalGrids.size()));
-    
     
     return 0;
 }
