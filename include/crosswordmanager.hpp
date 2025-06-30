@@ -9,6 +9,7 @@
 #include <QString>
 #include <QThread>
 #include <chrono>
+#include <QJsonObject>
 
 constexpr double WORD_DENSITY = 0.3;
 constexpr char EMPTY_LETTER = '.';
@@ -40,10 +41,13 @@ private:
     bool backtracking(int depth);
     void displayGrid(Logger::LogLevel level=Logger::LogLevel::Debug);
 
+    QJsonObject toJson() const;
+    QString generateJsonResponse();
+
 
     QVector<QString> grid;
     QVector<CrosswordCell> crosswordCells;
-    QVector<WordToFind> words;
+    QVector<WordToFind *> words;
     WordTree tree;
     DatabaseManager* dbManager;
     int maxDurationMs;

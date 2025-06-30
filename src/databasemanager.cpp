@@ -197,3 +197,38 @@ void DatabaseManager::fillWordsList(QVector<QString> &words)
         words.push_back(word);
     }
 }
+
+QPair<QString, QString> DatabaseManager::getWordDetails(const QString& word)
+{
+    QPair<QString, QString> details;
+
+    if (!m_db.isOpen())
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Impossible de récupérer les détails du mot '%2', la base de données n'est pas ouverte.")
+                                    .arg(m_connectionName).arg(word));
+        return details;
+    }
+
+    QSqlQuery query(m_db);
+    query.prepare("SELECT definition, hint FROM words WHERE word = :word");
+    query.bindValue(":word", word);
+
+    if (!query.exec())
+    {
+        Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Échec de l'exécution de la requête pour les détails du mot '%2': %3")
+                                    .arg(m_connectionName).arg(word).arg(query.lastError().text()));
+        return details;
+    }
+
+    if (query.next())
+    {
+        details.first = query.value("definition").toString();
+        details.second = query.value("hint").toString();
+    }
+    else
+    {
+        Logger::getInstance().log(Logger::LogLevel::Debug, QString("DatabaseManager '%1': Mot '%2' non trouvé dans la base de données.")
+                                    .arg(m_connectionName).arg(word));
+    }
+    return details;
+}

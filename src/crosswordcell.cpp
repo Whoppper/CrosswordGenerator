@@ -34,3 +34,27 @@ void WordToFind::setPlaced(bool placed)
 {
     isPlacedOk = placed;
 }
+
+QJsonObject WordToFind::toJson() const
+{
+    QJsonObject json;
+    json["hint"] = hint;
+    json["definition"] = definition;
+    json["direction"] = (direction == Horizontal ? "horizontal" : "vertical");
+    json["solution"] = solution;
+    return json;
+}
+
+QJsonObject CrosswordCell::toJson() const
+{
+    QJsonObject cellJson;
+
+    cellJson["x"] = position.x();
+    cellJson["y"] = position.y();
+
+    if (wordRight.isEnabled)
+        cellJson["word_right"] = wordRight.toJson();
+    if (wordDown.isEnabled)    
+        cellJson["word_down"] = wordDown.toJson();
+    return cellJson;
+}

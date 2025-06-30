@@ -25,6 +25,7 @@ public:
     // à appeler uniquement dans le thread principal
     bool fillDB();
     bool createTables();
+    QPair<QString, QString> getWordDetails(const QString& word);
 
 private:
     QSqlDatabase m_db;

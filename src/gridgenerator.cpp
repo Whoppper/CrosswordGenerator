@@ -90,6 +90,7 @@ void GridGenerator::onWorkerFinished(const GeneratedGridData& data)
     emit generationProgress(nbSuccess);
 
      Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé"));
+     Logger::getInstance().log(Logger::Info, data.content);
 
      if (poolTimer.isActive())
      { 

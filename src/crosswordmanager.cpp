@@ -7,6 +7,8 @@
 #include <limits>
 #include <QDebug>
 #include <QRandomGenerator>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 
 bool CrosswordManager::isCrosswordCellPosValid(int x, int y)
@@ -172,7 +174,7 @@ bool CrosswordManager::backtracking(int depth)
         return true;
     }
 
-    WordToFind &wordToFind = words[currentIndex];
+    WordToFind &wordToFind = *words[currentIndex];
     if (duration_ms > maxDurationMs)
     {
         Logger::getInstance().log(Logger::LogLevel::Debug, QString("current word. y:%0  x:%1 ").arg(wordToFind.y()).arg(wordToFind.x()));
@@ -215,11 +217,11 @@ void CrosswordManager::fillAllWordToFind()
     {
         if (cwc.isRightWordEnable())
         {
-            words.push_back(cwc.getRightWord());
+            words.push_back(cwc.getRightWordAddr());
         }
         if (cwc.isDownWordEnable())
         {
-            words.push_back(cwc.getDownWord());
+            words.push_back(cwc.getDownWordAddr());
         }
     }
 
@@ -246,11 +248,32 @@ QString CrosswordManager::startCrosswordGeneration()
     Logger::getInstance().log(Logger::LogLevel::Debug, QString("Exécution time : %0 ms").arg(duration_ms));
     Logger::getInstance().log(Logger::LogLevel::Debug, QString("Visited grids : %0 ").arg(visitedGrids));
     displayGrid(Logger::LogLevel::Debug);
+
+
     if (isOk)
     {
-        return QString("success");
+        QString response = generateJsonResponse();
+        return response;
     }
     return QString();
+}
+
+QString CrosswordManager::generateJsonResponse()
+{
+    for (int i = 0; i < words.size(); ++i)
+    {
+        QString currentPattern = getWordOnGrid(*words[i]);
+        QPair<QString, QString> details = dbManager->getWordDetails(currentPattern);
+        words[i]->solution = currentPattern;
+        words[i]->definition = details.first;
+        words[i]->hint = details.second;
+    }
+
+    QJsonObject crosswordData = toJson();
+    QJsonDocument doc(crosswordData);
+    QByteArray jsonData = doc.toJson(QJsonDocument::Indented); // Indented Compact
+    QString jsonString = QString::fromUtf8(jsonData);
+    return jsonString;
 }
 
 void CrosswordManager::displayGrid(Logger::LogLevel level)
@@ -286,9 +309,9 @@ int CrosswordManager::getNextWordToFindIndex()
     {
         for (int i = 0; i < words.size(); ++i)
         {
-            if (!words[i].isPlaced())
+            if (!words[i]->isPlaced())
             {
-                QString currentPattern = getWordOnGrid(words[i]);
+                QString currentPattern = getWordOnGrid(*words[i]);
                 int numPossibleWords = tree.countWordsByPattern(currentPattern, currentCutoff);
 
                 if (numPossibleWords < currentCutoff)
@@ -305,9 +328,9 @@ bool CrosswordManager::areRemainingWordsPossible()
 {
     for (int i = 0; i < words.size(); ++i)
     {
-        if (!words[i].isPlaced())
+        if (!words[i]->isPlaced())
         {
-            QString currentPattern = getWordOnGrid(words[i]);
+            QString currentPattern = getWordOnGrid(*words[i]);
             bool isOk = tree.findAnyWordByPattern(currentPattern);
             if (isOk == false)
             {
@@ -316,4 +339,24 @@ bool CrosswordManager::areRemainingWordsPossible()
         }
     }
     return true;
+}
+
+
+QJsonObject CrosswordManager::toJson() const
+{
+    QJsonObject crosswordJson;
+
+    if (!grid.isEmpty())
+    {
+        crosswordJson["rows"] = grid.size();
+        crosswordJson["cols"] = grid[0].size();
+    }
+
+    QJsonArray cellsArray;
+    for (const CrosswordCell& cell : crosswordCells)
+    {
+        cellsArray.append(cell.toJson());
+    }
+    crosswordJson["cells"] = cellsArray;
+    return crosswordJson;
 }
