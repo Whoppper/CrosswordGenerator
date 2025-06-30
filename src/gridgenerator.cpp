@@ -15,7 +15,7 @@ GridGenerator::GridGenerator(QObject *parent)
     gridSize.setWidth(settings.value("Crossword/gridCols", 10).toInt());
     gridSize.setHeight(settings.value("Crossword/gridRows", 10).toInt());
     workerMaxDurationMs = settings.value("Thread/WorkerMaxDurationMs", 30000).toInt();
-    maxDurationMs = settings.value("Thread/ThreadPoolMaxDurationMs", 60000).toInt();
+    maxDurationMs = settings.value("Thread/TheadPoolMaxDurationMs", 60000).toInt();
     nbWorkers = settings.value("Thread/NbWorkers", 5).toInt();
     dbPath = settings.value("Database/DBPath", "../dictionary.db").toString();
 }
