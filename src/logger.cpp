@@ -130,10 +130,8 @@ void Logger::writeLogMessage(LogLevel level, const QString &message)
         levelStr = "CRITICAL";
         break;
     }
-    //QString threadId = QString::number((qintptr)QThread::currentThreadId());
     QString logMessage = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz") +
                          " [" + levelStr + "] " +
-                       //  "[" + threadId + "] " + 
                          ": " + message;
     logStream << logMessage << Qt::endl;
     logFile.flush();
@@ -147,7 +145,7 @@ void Logger::writeLogMessage(LogLevel level, const QString &message)
 void Logger::loadSettings()
 {
     QSettings settings(":/data/config.ini", QSettings::IniFormat);
-    logDirectory = settings.value("Log/logDirectory", "./logs").toString();
+    logDirectory = settings.value("Log/logDirectory", "../logs").toString();
     maxLogFiles = settings.value("Log/maxLogFiles", 5).toInt();
     logFileSizeLimit = settings.value("Log/logFileSizeLimit", 50 * 1024 * 1024).toLongLong();
     if (maxLogFiles < 1)

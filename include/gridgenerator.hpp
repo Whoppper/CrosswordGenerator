@@ -10,8 +10,6 @@
 
 #include "gridworker.hpp"
 
-
-
 class GridGenerator : public QObject
 {
     Q_OBJECT

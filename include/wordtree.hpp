@@ -2,7 +2,6 @@
 #include <QHash> 
 #include <QString>
 #include <QVector> 
-
 #include <limits>
 
 class TreeNode

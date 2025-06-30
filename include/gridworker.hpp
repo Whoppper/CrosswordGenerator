@@ -4,10 +4,8 @@
 #include <QObject>
 #include <QSize>
 #include <QString>
-#include <QVariant>
 
 class DatabaseManager;
-
 
 struct GeneratedGridData
 {
@@ -26,7 +24,6 @@ public:
     explicit GridWorker(const QSize& workerGridSize, const QString& dbFilePath, int workerDurationMs, QObject *parent = nullptr);
 
 public slots:
-
     void doWork();
 
 signals:
@@ -36,7 +33,7 @@ private:
     QSize gridSize;
     QString dbFilePath;
     int durationMs;
-    DatabaseManager* dbManager;
+    DatabaseManager* dbManager; //delete by parent
 
     Q_DISABLE_COPY(GridWorker)
 };

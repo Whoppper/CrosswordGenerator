@@ -14,6 +14,8 @@
 constexpr double WORD_DENSITY = 0.3;
 constexpr char EMPTY_LETTER = '.';
 constexpr char CROSSWORD_CELL= '#';
+constexpr int WORD_MIN_SIZE= 2;
+constexpr int GRID_MIN_SIZE= 5;
 
 class DatabaseManager;
 
@@ -30,11 +32,11 @@ private:
     CrosswordManager(const CrosswordManager&) = delete;
     CrosswordManager& operator=(const CrosswordManager&) = delete;
 
-    bool isCrosswordCellPosValid(int x, int y);
-    QString getWordOnGrid(const WordToFind &word);
+    bool isCrosswordCellPosValid(int x, int y) const;
+    QString getWordOnGrid(const WordToFind &word) const;
     void placeWordOnGrid(WordToFind &word, const QString& wordToTry);
     int getNextWordToFindIndex();
-    bool areRemainingWordsPossible();
+    bool areRemainingWordsPossible() const;
 
     void fillAllWordToFind();
     void createWordsTree();
@@ -47,9 +49,9 @@ private:
 
     QVector<QString> grid;
     QVector<CrosswordCell> crosswordCells;
-    QVector<WordToFind *> words;
+    QVector<WordToFind *> words; // pointeurs de crosswordCells, pas besoin de delete
     WordTree tree;
-    DatabaseManager* dbManager;
+    DatabaseManager* dbManager; // le parent est renseigné pas besoin de delete
     int maxDurationMs;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start;

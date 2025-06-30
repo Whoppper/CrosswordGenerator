@@ -16,12 +16,12 @@ void CrosswordCell::enableDownWord(Direction dir)
     wordDown.position.setY(y() + 1);
 }
 
-bool CrosswordCell::isDownWordEnable()
+bool CrosswordCell::isDownWordEnable() const
 {
     return wordDown.isEnabled;
 }
 
-bool CrosswordCell::isRightWordEnable()
+bool CrosswordCell::isRightWordEnable() const
 {
     return wordRight.isEnabled;
 }

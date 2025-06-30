@@ -46,8 +46,8 @@ public:
 
     void enableRightWord(Direction dir);
     void enableDownWord(Direction dir);
-    bool isDownWordEnable();
-    bool isRightWordEnable();
+    bool isDownWordEnable() const;
+    bool isRightWordEnable() const; 
     QJsonObject toJson() const;
 
 

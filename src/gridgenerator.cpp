@@ -47,9 +47,9 @@ void GridGenerator::startGenerationPool()
 
 void GridGenerator::launchNewWorker()
 {
-    QThread* thread = new QThread(/*this*/);
+    QThread* thread = new QThread(); // delete par le deleteLater
     
-    GridWorker* worker = new GridWorker(gridSize, dbPath, workerMaxDurationMs);
+    GridWorker* worker = new GridWorker(gridSize, dbPath, workerMaxDurationMs); // delete par le deleteLater
 
     worker->moveToThread(thread);
 
@@ -82,18 +82,16 @@ void GridGenerator::onWorkerFinished(const GeneratedGridData& data)
     if (data.success == true)
         nbSuccess++;
 
-    Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé (grilles générées: %1). Succès: %2, Thread ID: %3")
-                                .arg(generatedGrids.size())
+    Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé. Succès: %1, Thread ID: %2")
                                 .arg(data.success ? "Oui" : "Non")
                                 .arg(data.workerThreadId));
 
     emit generationProgress(nbSuccess);
 
-     Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé"));
-     Logger::getInstance().log(Logger::Info, data.content);
+    Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé"));
 
-     if (poolTimer.isActive())
-     { 
+    if (poolTimer.isActive())
+    { 
         Logger::getInstance().log(Logger::Debug, "GridGenerator: Relance d'un nouveau worker.");
         launchNewWorker();
     }

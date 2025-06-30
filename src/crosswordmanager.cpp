@@ -2,56 +2,56 @@
 #include "databasemanager.hpp"
 #include "crosswordcell.hpp"
 
-#include <random> 
 #include <chrono>
+#include <random>
 #include <limits>
+
 #include <QDebug>
 #include <QRandomGenerator>
 #include <QJsonDocument>
 #include <QJsonArray>
 
 
-bool CrosswordManager::isCrosswordCellPosValid(int x, int y)
+bool CrosswordManager::isCrosswordCellPosValid(int x, int y) const
 {
-    int nbEmptyCellLeft = 0;
-    int nbEmptyCellUp = 0;
-    int tmpX = x;
-    int tmpY = y;
-
-    if (grid.size() == 0)
-        return false;
-
     int rows = grid.size();
     int cols = grid[0].size();
-    if ((x >= cols - 2 && y >= rows - 2) || x == 0 || y == 0)
+    // pas de cellule sur les bords gauche et haut. pas de cellule dans le coin en bas à droite
+    if ((x >= cols - WORD_MIN_SIZE && y >= rows - WORD_MIN_SIZE) || x == 0 || y == 0)
         return false;
 
-    while (--x >= 0)
+    int emptyCellLeft = 0;
+    for (int currentX = x-1; currentX >= 0; --currentX)
     {
-        if (grid[y][x] == EMPTY_LETTER)
-        nbEmptyCellLeft++;
-        else if (grid[y][x] == CROSSWORD_CELL)
+        if (grid[y][currentX] == EMPTY_LETTER)
+            emptyCellLeft++;
+        else if (grid[y][currentX] == CROSSWORD_CELL)
             break;
     }
-    if (nbEmptyCellLeft <= 1)
+    if (emptyCellLeft < WORD_MIN_SIZE)
+    {
+        // peut etre autoriser emptyCellLeft==0
         return false;
-    x = tmpX;
+    }
 
-    while (--y >= 0)
+    int emptyCellUp = 0;
+    for (int currentY = y - 1; currentY >= 0; --currentY)
     {
-        if (grid[y][x] == EMPTY_LETTER)
-        nbEmptyCellUp++;
-        else if (grid[y][x] == CROSSWORD_CELL)
+        if (grid[currentY][x] == EMPTY_LETTER)
+            emptyCellUp++;
+        else if (grid[currentY][x] == CROSSWORD_CELL)
             break;
     }
-    if (nbEmptyCellUp <= 1)
+    if (emptyCellUp < WORD_MIN_SIZE)
+    {
+        // peut etre autoriser emptyCellUp==0
         return false;
-    y = tmpY;
+    }
     return true;
 }
 
 
-QString CrosswordManager::getWordOnGrid(const WordToFind &word)
+QString CrosswordManager::getWordOnGrid(const WordToFind &word) const
 {
     QString letters;
     int x = word.x();
@@ -69,14 +69,13 @@ void CrosswordManager::placeWordOnGrid(WordToFind &word, const QString& wordToTr
 {
     int x = word.x();
     int y = word.y();
-    for (auto &letter : wordToTry) 
+    for (QChar letter : wordToTry) 
     {
         grid[y][x] = letter;
         x += word.direction == Direction::Horizontal;
         y += word.direction == Direction::Vertical;
     }
 }
-
 
 
 CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QObject *parent)
@@ -97,22 +96,21 @@ CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDuration
 
 bool CrosswordManager::generateGrid(int rows, int cols)
 {
-    if ((rows <= 4 || cols <= 4 ) && rows % 2 == 0 && cols % 2 == 0)
+    if ((rows < GRID_MIN_SIZE || cols < GRID_MIN_SIZE ))
     {
-        Logger::getInstance().log(Logger::LogLevel::Error, "Invalid grid dimensions. Rows and columns must be >4 and even.");
+        Logger::getInstance().log(Logger::LogLevel::Error, "Invalid grid dimensions.");
         return false;
     }
     grid.clear();
     grid.resize(rows);
+    crosswordCells.clear();
 
     for (int i = 0; i < rows; ++i)
     {
         grid[i].fill(EMPTY_LETTER, cols);
     }
 
-    std::uniform_real_distribution<> dist(0.0, 1.0);
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::mt19937 rng(seed);
+    QRandomGenerator *rng = QRandomGenerator::global();
 
     for (int y = 0; y < rows; y++)
     {
@@ -129,7 +127,8 @@ bool CrosswordManager::generateGrid(int rows, int cols)
             {
                 grid[y][x]= CROSSWORD_CELL;
                 crosswordCells.append(CrosswordCell(x, y));
-                crosswordCells.back().enableRightWord(Direction::Vertical);
+                if (x != cols - 1)
+                    crosswordCells.back().enableRightWord(Direction::Vertical);
                 crosswordCells.back().enableDownWord(Direction::Vertical);
             }
             else if (x == 0 && y % 2 == 0)
@@ -137,22 +136,26 @@ bool CrosswordManager::generateGrid(int rows, int cols)
                 grid[y][x]= CROSSWORD_CELL;
                 crosswordCells.append(CrosswordCell(x, y));
                 crosswordCells.back().enableRightWord(Direction::Horizontal);
-                crosswordCells.back().enableDownWord(Direction::Horizontal);
+                if (y != rows - 1)
+                    crosswordCells.back().enableDownWord(Direction::Horizontal);
             }
-            else if (dist(rng) < WORD_DENSITY
+            else if (rng->generateDouble() < WORD_DENSITY
                     && isCrosswordCellPosValid(x, y))  
             {
                 grid[y][x]= CROSSWORD_CELL;
                 crosswordCells.append(CrosswordCell(x, y));
-                if (x < cols - 2)
+                if (x < cols - WORD_MIN_SIZE)
                     crosswordCells.back().enableRightWord(Direction::Horizontal);
-                if (y < rows - 2)
+                if (y < rows - WORD_MIN_SIZE)
                     crosswordCells.back().enableDownWord(Direction::Vertical);
             }
         }
     }
     return true;
 }
+
+
+
 
 
 
@@ -177,8 +180,8 @@ bool CrosswordManager::backtracking(int depth)
     WordToFind &wordToFind = *words[currentIndex];
     if (duration_ms > maxDurationMs)
     {
-        Logger::getInstance().log(Logger::LogLevel::Debug, QString("current word. y:%0  x:%1 ").arg(wordToFind.y()).arg(wordToFind.x()));
-        Logger::getInstance().log(Logger::LogLevel::Debug, QString("max depth:%0").arg(maxdepth));
+        Logger::getInstance().log(Logger::LogLevel::Debug, QString("current word. y:%1  x:%2 ").arg(wordToFind.y()).arg(wordToFind.x()));
+        Logger::getInstance().log(Logger::LogLevel::Debug, QString("max depth:%1").arg(maxdepth));
         throw std::runtime_error("maxDurationMs reached");
     }
     
@@ -202,7 +205,7 @@ bool CrosswordManager::backtracking(int depth)
 
         wordToFind.setPlaced(true);
         bool result = backtracking(depth + 1);
-        if (result == true)
+        if (result)
             return true;
         grid = gridCpy;
         wordToFind.setPlaced(false);
@@ -224,7 +227,6 @@ void CrosswordManager::fillAllWordToFind()
             words.push_back(cwc.getDownWordAddr());
         }
     }
-
 }
 
 QString CrosswordManager::startCrosswordGeneration()
@@ -271,7 +273,7 @@ QString CrosswordManager::generateJsonResponse()
 
     QJsonObject crosswordData = toJson();
     QJsonDocument doc(crosswordData);
-    QByteArray jsonData = doc.toJson(QJsonDocument::Indented); // Indented Compact
+    QByteArray jsonData = doc.toJson(QJsonDocument::Compact); // Indented Compact
     QString jsonString = QString::fromUtf8(jsonData);
     return jsonString;
 }
@@ -302,7 +304,6 @@ void CrosswordManager::createWordsTree()
 
 int CrosswordManager::getNextWordToFindIndex()
 {
-    int bestIndex = -1;
     QVector<int> cutoffs = {2,3,5,10, 20, 40, 100, 500, std::numeric_limits<int>::max()};
 
     for (int currentCutoff : cutoffs)
@@ -321,18 +322,18 @@ int CrosswordManager::getNextWordToFindIndex()
             }
         }
     }
-    return bestIndex;
+    return -1;
 }
 
-bool CrosswordManager::areRemainingWordsPossible()
+bool CrosswordManager::areRemainingWordsPossible() const
 {
-    for (int i = 0; i < words.size(); ++i)
+    for (const WordToFind *wordPtr : words)
     {
-        if (!words[i]->isPlaced())
+        if (!wordPtr->isPlaced())
         {
-            QString currentPattern = getWordOnGrid(*words[i]);
-            bool isOk = tree.findAnyWordByPattern(currentPattern);
-            if (isOk == false)
+            QString currentPattern = getWordOnGrid(*wordPtr);
+            bool isPossible  = tree.findAnyWordByPattern(currentPattern);
+            if (!isPossible)
             {
                 return false;
             }
