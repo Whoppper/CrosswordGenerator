@@ -70,6 +70,7 @@ set(SOURCE_FILES
     include/wordtree.hpp
     include/gridworker.hpp
     include/gridgenerator.hpp
+    include/cell.hpp
 )
 
 add_executable(crossword src/main.cpp ${SOURCE_FILES})

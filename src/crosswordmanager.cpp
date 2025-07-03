@@ -23,9 +23,9 @@ bool CrosswordManager::isCrosswordCellPosValid(int x, int y) const
     int emptyCellLeft = 0;
     for (int currentX = x-1; currentX >= 0; --currentX)
     {
-        if (grid[y][currentX] == EMPTY_LETTER)
+        if (grid[y][currentX].character() == EMPTY_LETTER)
             emptyCellLeft++;
-        else if (grid[y][currentX] == CROSSWORD_CELL)
+        else if (grid[y][currentX].character()== CROSSWORD_CELL)
             break;
     }
     if (emptyCellLeft < WORD_MIN_SIZE)
@@ -37,9 +37,9 @@ bool CrosswordManager::isCrosswordCellPosValid(int x, int y) const
     int emptyCellUp = 0;
     for (int currentY = y - 1; currentY >= 0; --currentY)
     {
-        if (grid[currentY][x] == EMPTY_LETTER)
+        if (grid[currentY][x].character() == EMPTY_LETTER)
             emptyCellUp++;
-        else if (grid[currentY][x] == CROSSWORD_CELL)
+        else if (grid[currentY][x].character() == CROSSWORD_CELL)
             break;
     }
     if (emptyCellUp < WORD_MIN_SIZE)
@@ -56,22 +56,32 @@ QString CrosswordManager::getWordOnGrid(const WordToFind &word) const
     QString letters;
     int x = word.x();
     int y = word.y();
-    while (x < grid[0].size() && y < grid.size() && grid[y][x] != CROSSWORD_CELL)
+    while (x < grid[0].size() && y < grid.size() && grid[y][x].character() != CROSSWORD_CELL)
     {
-        letters.push_back(grid[y][x]);
+        letters.push_back(grid[y][x].character());
         x += word.direction == Direction::Horizontal;
         y += word.direction == Direction::Vertical;
     }
     return letters;
 }
 
-void CrosswordManager::placeWordOnGrid(WordToFind &word, const QString& wordToTry)
+void CrosswordManager::placeWordOnGrid(WordToFind &word, const QString& wordToTry , QVector<WordToFind*>& intersectedWords)
 {
     int x = word.x();
     int y = word.y();
     for (QChar letter : wordToTry) 
     {
-        grid[y][x] = letter;
+        if (grid[y][x].character() == EMPTY_LETTER)
+        {
+            for (WordToFind* associatedWord : grid[y][x].associatedWords())
+            {
+                if (associatedWord != &word)
+                {
+                    intersectedWords.push_back(associatedWord);
+                }
+            }
+        }
+        grid[y][x].setCharacter(letter);
         x += word.direction == Direction::Horizontal;
         y += word.direction == Direction::Vertical;
     }
@@ -108,7 +118,10 @@ bool CrosswordManager::generateGrid(int rows, int cols)
 
     for (int i = 0; i < rows; ++i)
     {
-        grid[i].fill(EMPTY_LETTER, cols);
+        grid[i].resize(cols);
+        for(int j = 0; j < cols; ++j) {
+            grid[i][j].setCharacter(EMPTY_LETTER);
+        }
     }
 
     QRandomGenerator *rng = QRandomGenerator::global();
@@ -119,14 +132,14 @@ bool CrosswordManager::generateGrid(int rows, int cols)
         {
             if (x == 0 && y == 0)
             {
-                grid[y][x]= CROSSWORD_CELL;
+                grid[y][x].setCharacter(CROSSWORD_CELL);
                 crosswordCells.append(CrosswordCell(x, y));
                 crosswordCells.back().enableRightWord(Direction::Vertical);
                 crosswordCells.back().enableDownWord(Direction::Horizontal);
             }
             else if (y == 0 && x % 2 == 0)
             {
-                grid[y][x]= CROSSWORD_CELL;
+                grid[y][x].setCharacter(CROSSWORD_CELL);
                 crosswordCells.append(CrosswordCell(x, y));
                 if (x != cols - 1)
                     crosswordCells.back().enableRightWord(Direction::Vertical);
@@ -134,7 +147,7 @@ bool CrosswordManager::generateGrid(int rows, int cols)
             }
             else if (x == 0 && y % 2 == 0)
             {
-                grid[y][x]= CROSSWORD_CELL;
+                grid[y][x].setCharacter(CROSSWORD_CELL);
                 crosswordCells.append(CrosswordCell(x, y));
                 crosswordCells.back().enableRightWord(Direction::Horizontal);
                 if (y != rows - 1)
@@ -143,7 +156,7 @@ bool CrosswordManager::generateGrid(int rows, int cols)
             else if (rng->generateDouble() < WORD_DENSITY
                     && isCrosswordCellPosValid(x, y))  
             {
-                grid[y][x]= CROSSWORD_CELL;
+                grid[y][x].setCharacter(CROSSWORD_CELL);
                 crosswordCells.append(CrosswordCell(x, y));
                 if (x < cols - WORD_MIN_SIZE)
                     crosswordCells.back().enableRightWord(Direction::Horizontal);
@@ -194,11 +207,12 @@ bool CrosswordManager::backtracking(int depth)
         return false;
 
     std::shuffle(possibleWords.begin(), possibleWords.end(), *QRandomGenerator::global());
-    QVector<QString> gridCpy = grid;
+    QVector<QVector<Cell>> gridCpy = grid;
     for (const QString& word : possibleWords)
     {
-        placeWordOnGrid(wordToFind, word);
-        if (!areRemainingWordsPossible())
+        QVector<WordToFind*> wordsToVerify;
+        placeWordOnGrid(wordToFind, word, wordsToVerify);
+        if (!checkSpecificWordsPossible(wordsToVerify))
         {
             grid = gridCpy;
             continue;
@@ -217,15 +231,40 @@ bool CrosswordManager::backtracking(int depth)
 void CrosswordManager::fillAllWordToFind()
 {
     words.clear();
+    for (int y = 0; y < grid.size(); ++y)
+    {
+        for (int x = 0; x < grid[y].size(); ++x)
+        {
+            grid[y][x] = Cell(grid[y][x].character());
+        }
+    }
+
+
     for (CrosswordCell &cwc : crosswordCells)
     {
         if (cwc.isRightWordEnable())
         {
             words.push_back(cwc.getRightWordAddr());
+            int currentX = cwc.x();
+            int currentY = cwc.y();
+            while (currentX < grid[0].size() && currentY < grid.size() && grid[currentY][currentX].character() != CROSSWORD_CELL)
+            {
+                grid[currentY][currentX].addWordToFind(cwc.getRightWordAddr());
+                currentY += cwc.getRightWordAddr()->direction == Direction::Vertical;
+                currentX += cwc.getRightWordAddr()->direction == Direction::Horizontal;
+            }
         }
         if (cwc.isDownWordEnable())
         {
             words.push_back(cwc.getDownWordAddr());
+            int currentX = cwc.x();
+            int currentY = cwc.y();
+            while (currentX < grid[0].size() && currentY < grid.size() && grid[currentY][currentX].character() != CROSSWORD_CELL)
+            {
+                grid[currentY][currentX].addWordToFind(cwc.getDownWordAddr());
+                currentY += cwc.getDownWordAddr()->direction == Direction::Vertical;
+                currentX += cwc.getDownWordAddr()->direction == Direction::Horizontal;
+            }
         }
     }
 }
@@ -282,8 +321,13 @@ void CrosswordManager::displayGrid(Logger::LogLevel level)
 {
     for (auto &row : grid)
     {
-        qDebug() << qPrintable(row);
-        Logger::getInstance().log(level, row);
+        QString rowString;
+        for (const Cell& cell : row)
+        {
+            rowString.append(cell.character());
+        }
+        qDebug() << qPrintable(rowString);
+        Logger::getInstance().log(level, rowString);
     }
     qDebug() << "";
     Logger::getInstance().log(level, "\n");
@@ -314,18 +358,15 @@ int CrosswordManager::getNextWordToFindIndex()
     return -1;
 }
 
-bool CrosswordManager::areRemainingWordsPossible() const
+bool CrosswordManager::checkSpecificWordsPossible(const QVector<WordToFind*>& wordsToCheck) const
 {
-    for (const WordToFind *wordPtr : words)
+    for (const WordToFind* wordPtr : wordsToCheck)
     {
-        if (!wordPtr->isPlaced())
+        QString currentPattern = getWordOnGrid(*wordPtr);
+        bool isPossible = tree->findAnyWordByPattern(currentPattern);
+        if (!isPossible)
         {
-            QString currentPattern = getWordOnGrid(*wordPtr);
-            bool isPossible  = tree->findAnyWordByPattern(currentPattern);
-            if (!isPossible)
-            {
-                return false;
-            }
+            return false;
         }
     }
     return true;
