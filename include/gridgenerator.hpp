@@ -9,6 +9,8 @@
 #include <QVector>
 
 #include "gridworker.hpp"
+#include "wordtree.hpp"
+#include "databasemanager.hpp"
 
 class GridGenerator : public QObject
 {
@@ -45,6 +47,8 @@ private:
     QList<QPair<QThread*, GridWorker*>> runningWorkerPairs;
     QVector<GeneratedGridData> generatedGrids;
     int nbSuccess = 0;
+    QSharedPointer<WordTree> wordTree;
+    DatabaseManager* dbManagerForTree;
 };
 
 #endif // GRIDGENERATOR_HPP

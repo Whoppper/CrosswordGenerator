@@ -10,6 +10,7 @@
 #include <QThread>
 #include <chrono>
 #include <QJsonObject>
+#include <QSharedPointer>
 
 constexpr double WORD_DENSITY = 0.3;
 constexpr char EMPTY_LETTER = '.';
@@ -23,7 +24,7 @@ class CrosswordManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QObject *parent = nullptr);
+    explicit CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QSharedPointer<WordTree> sharedWordTree,  QObject *parent = nullptr);
     bool generateGrid(int rows, int cols);
     QString startCrosswordGeneration();
 private:
@@ -39,7 +40,6 @@ private:
     bool areRemainingWordsPossible() const;
 
     void fillAllWordToFind();
-    void createWordsTree();
     bool backtracking(int depth);
     void displayGrid(Logger::LogLevel level=Logger::LogLevel::Debug);
 
@@ -50,7 +50,7 @@ private:
     QVector<QString> grid;
     QVector<CrosswordCell> crosswordCells;
     QVector<WordToFind *> words; // pointeurs de crosswordCells, pas besoin de delete
-    WordTree tree;
+    QSharedPointer<WordTree> tree;
     DatabaseManager* dbManager; // le parent est renseigné pas besoin de delete
     int maxDurationMs;
 

@@ -4,6 +4,7 @@
 
 #include <QThread>
 #include <QSettings>
+#include <QSharedPointer>
 
 GridGenerator::GridGenerator(QObject *parent)
     : QObject(parent)
@@ -18,6 +19,26 @@ GridGenerator::GridGenerator(QObject *parent)
     maxDurationMs = settings.value("Thread/TheadPoolMaxDurationMs", 60000).toInt();
     nbWorkers = settings.value("Thread/NbWorkers", 5).toInt();
     dbPath = settings.value("Database/DBPath", "../dictionary.db").toString();
+
+    dbManagerForTree = new DatabaseManager("TreeDbConnection", dbPath, this);
+    if (!dbManagerForTree->openDatabase())
+    {
+        Logger::getInstance().log(Logger::Error, "GridGenerator: Impossible d'ouvrir la base de données pour l'arbre de mots. Erreur: " + dbManagerForTree->lastError().text());
+        return ;
+    }
+    else
+    {
+        Logger::getInstance().log(Logger::Info, "GridGenerator: Base de données ouverte pour l'arbre de mots. Remplissage de l'arbre...");
+        QVector<QString> allWords;
+        dbManagerForTree->fillWordsList(allWords);
+        wordTree = QSharedPointer<WordTree>::create();
+        for (const QString &word : allWords)
+        {
+            wordTree->insert(word);
+        }
+        dbManagerForTree->closeDatabase();
+        Logger::getInstance().log(Logger::Info, "GridGenerator: Arbre de mots rempli et base de données fermée.");
+    }
 }
 
 
@@ -49,7 +70,7 @@ void GridGenerator::launchNewWorker()
 {
     QThread* thread = new QThread(); // delete par le deleteLater
     
-    GridWorker* worker = new GridWorker(gridSize, dbPath, workerMaxDurationMs); // delete par le deleteLater
+    GridWorker* worker = new GridWorker(gridSize, dbPath, workerMaxDurationMs, wordTree); // delete par le deleteLater
 
     worker->moveToThread(thread);
 

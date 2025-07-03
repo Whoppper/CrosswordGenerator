@@ -5,13 +5,18 @@
 
 #include <QThread>
 
-GridWorker::GridWorker(const QSize& workerGridSize, const QString& dbPath, int workerDurationMs, QObject *parent)
+GridWorker::GridWorker(const QSize& workerGridSize, const QString& dbPath, int workerDurationMs, QSharedPointer<WordTree> sharedWordTree, QObject *parent)
     : QObject(parent),
       gridSize(workerGridSize),
       dbFilePath(dbPath),
-      durationMs(workerDurationMs)
+      durationMs(workerDurationMs),
+      dbManager(nullptr),
+      wordTree(sharedWordTree)
 {
-
+    if (!wordTree)
+    {
+        Logger::getInstance().log(Logger::Critical, "GridWorker créé sans WordsTree valide !");
+    }
 }
 
 void GridWorker::doWork()
@@ -40,7 +45,7 @@ void GridWorker::doWork()
 
 
     QString generatedContent;
-    CrosswordManager crosswordManager(dbManager,durationMs, this);
+    CrosswordManager crosswordManager(dbManager,durationMs, wordTree, this);
     bool ok = crosswordManager.generateGrid(gridSize.height(), gridSize.height());
     if (ok)
     {

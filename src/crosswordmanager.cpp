@@ -78,8 +78,9 @@ void CrosswordManager::placeWordOnGrid(WordToFind &word, const QString& wordToTr
 }
 
 
-CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QObject *parent)
+CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QSharedPointer<WordTree> sharedWordTree, QObject *parent)
     : QObject(parent),
+      tree(sharedWordTree),
       dbManager(_dbManager),
       maxDurationMs(_maxDurationMs)
 {
@@ -188,7 +189,7 @@ bool CrosswordManager::backtracking(int depth)
     QString letters = getWordOnGrid(wordToFind);
 
     QVector<QString> possibleWords;
-    tree.findWordsByPattern(letters, possibleWords);
+    tree->findWordsByPattern(letters, possibleWords);
     if (possibleWords.isEmpty())
         return false;
 
@@ -235,7 +236,6 @@ QString CrosswordManager::startCrosswordGeneration()
     Logger::getInstance().log(Logger::LogLevel::Debug, "startCrosswordGeneration()");
     start = std::chrono::high_resolution_clock::now();
     fillAllWordToFind();
-    createWordsTree();
     visitedGrids = 0;
     try
     {
@@ -291,17 +291,6 @@ void CrosswordManager::displayGrid(Logger::LogLevel level)
 }
 
 
-void CrosswordManager::createWordsTree()
-{
-    QVector<QString> allWords;
-    dbManager->fillWordsList(allWords);
-    for (const QString &word : allWords)
-    {
-        tree.insert(word);
-    }
-}
-
-
 int CrosswordManager::getNextWordToFindIndex()
 {
     QVector<int> cutoffs = {2,3,5,10, 20, 40, 100, 500, std::numeric_limits<int>::max()};
@@ -313,7 +302,7 @@ int CrosswordManager::getNextWordToFindIndex()
             if (!words[i]->isPlaced())
             {
                 QString currentPattern = getWordOnGrid(*words[i]);
-                int numPossibleWords = tree.countWordsByPattern(currentPattern, currentCutoff);
+                int numPossibleWords = tree->countWordsByPattern(currentPattern, currentCutoff);
 
                 if (numPossibleWords < currentCutoff)
                 {
@@ -332,7 +321,7 @@ bool CrosswordManager::areRemainingWordsPossible() const
         if (!wordPtr->isPlaced())
         {
             QString currentPattern = getWordOnGrid(*wordPtr);
-            bool isPossible  = tree.findAnyWordByPattern(currentPattern);
+            bool isPossible  = tree->findAnyWordByPattern(currentPattern);
             if (!isPossible)
             {
                 return false;

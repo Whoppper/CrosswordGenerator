@@ -1,3 +1,6 @@
+#ifndef WORDTRESS_H
+#define WORDTRESS_H
+
 #include <QChar>
 #include <QHash> 
 #include <QString>
@@ -60,3 +63,4 @@ private:
     int countWordsByPatternRecursiveReversed(TreeNode* node, const QString& pattern, int index, int maxCount, int& currentCount) const;
 };
 
+#endif 
