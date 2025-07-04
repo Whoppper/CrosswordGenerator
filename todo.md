@@ -1,83 +1,139 @@
-I. Optimisation du Traitement des Mots
-1. Gestion des Arbres de Mots (Tries)
+# 🚀 Feuille de Route du Projet Mots Croisés 🚀
 
-Priorité 5 : Centraliser la création des arbres de mots (normal et inversé) pour qu'ils soient générés une seule fois avant le lancement des threads. Les workers recevront un pointeur vers ces arbres partagés, évitant ainsi des créations répétées et coûteuses.
+Cette feuille de route détaille les objectifs, les priorités et les améliorations planifiées pour l'algorithme de résolution et de génération de mots croisés.
 
-Priorité 1 : Affiner la logique de sélection de l'arbre (normal ou inversé) dans la fonction findWordsByPattern() afin de garantir le choix le plus optimal pour la recherche, car cette fonction est critique pour la performance.
+---
 
-Priorité 2 : Développer un outil ou une méthode pour évaluer et comparer les performances des recherches en fonction du choix de l'arbre.
+## I. 💡 Optimisation du Traitement des Mots
 
-Priorité 2 : Vérifier concrètement que l'utilisation de l'arbre inversé apporte un gain de performance significatif dans les cas prévus.
+### **1. Gestion des Arbres de Mots (Tries)**
 
-II. Amélioration de l'Algorithme de Génération de Grilles
-1. Forward Checking et Vérification des Contraintes
+* **Priorité 1 : Affinage de la Logique de Sélection d'Arbre**
+    * **Objectif :** Optimiser la fonction `findWordsByPattern()` en garantissant le **choix le plus efficace** entre l'arbre normal et l'arbre inversé pour chaque recherche.
+    * **Justification :** Cette fonction est cruciale pour la performance globale de l'algorithme de résolution.
+    * *Considération : Analyser les motifs de recherche (e.g., présence de caractères connus en début/fin de mot) pour diriger le choix de l'arbre.*
 
-Priorité 5 : Essentiel : Modifier le mécanisme de vérification de validité après le placement d'un mot pour qu'il n'inspecte que les mots ayant une intersection directe avec le mot récemment placé. Cela réduira drastiquement les calculs inutiles.
+* **Priorité 2 : Outil d'Évaluation des Performances de Recherche**
+    * **Objectif :** Développer un mécanisme pour **évaluer et comparer précisément** les performances des recherches en fonction du type d'arbre utilisé.
+    * *Résultat attendu : Des métriques claires pour valider les gains d'optimisation.*
 
-Suggestion : Revoir la conception de la classe Cell pour qu'elle contienne une liste de pointeurs vers les WordToFind associés, ainsi qu'un QChar. Penser à surcharger l'opérateur = pour ne copier que le QChar.
+* **Priorité 2 : Vérification du Gain de Performance de l'Arbre Inversé**
+    * **Objectif :** Confirmer **empiriquement** que l'utilisation de l'arbre inversé apporte un **bénéfice significatif** en performance dans les scénarios prévus.
+    * *Méthode : Mener des benchmarks ciblés pour quantifier l'impact de cette optimisation.*
 
-Priorité 1 : Examiner le comportement actuel du "forward checking" et déterminer s'il est nécessaire d'apporter des modifications supplémentaires (par exemple, évaluer la viabilité globale de la grille ou le nombre de mots possibles restants pour d'autres cases). Si l'approche actuelle est jugée suffisante, ne rien changer.
+---
 
-2. Heuristiques de Sélection de Mots
+## II. 🧩 Amélioration de l'Algorithme de Génération de Grilles
 
-Priorité 4 : Implémenter un design pattern Strategy pour la sélection du prochain mot à placer sur la grille. Cela permettra de définir différentes heuristiques de manière modulaire.
+### **1. Forward Checking et Vérification des Contraintes**
 
-Priorité 2 : Développer de nouvelles heuristiques, en se concentrant sur un compromis entre le choix du mot ayant le moins de possibilités restantes (pour réduire les branches de l'algorithme) et celui ayant le plus d'intersections non résolues (pour maximiser les contraintes).
+* **Priorité 3 : Optimisation des Cellules (`QChar` et `undo()` )**
+    * **Objectif :** Surcharger l'opérateur `=` de la cellule pour ne copier que le `QChar` et implémenter une méthode `undo()` pour éviter les copies coûteuses de grilles entières lors du backtracking.
+    * *Impact : Réduction significative de l'overhead lié aux opérations de copie/restauration d'état.*
 
-Priorité 2 : Mettre en place un système pour évaluer laquelle de ces heuristiques donne les meilleurs résultats en termes de temps de génération et de qualité des grilles.
+* **Priorité 1 : Évaluation du "Forward Checking"**
+    * **Objectif :** Examiner le comportement actuel du "forward checking" et déterminer la nécessité de modifications additionnelles (par exemple, évaluer la viabilité globale de la grille ou le nombre de mots possibles restants pour les cases non encore remplies).
+    * **Décision :** Si l'approche actuelle est jugée suffisante et ne présente pas de goulots d'étranglement, aucune modification ne sera apportée.
 
-3. Algorithmes de Résolution
+### **2. Heuristiques de Sélection de Mots**
 
-Priorité 5 : Appliquer le design pattern Strategy pour les algorithmes de résolution des grilles. Cela permettra de centraliser la logique de résolution dans des classes dédiées plutôt que de l'éparpiller dans CrosswordManager, rendant le code plus propre et maintenable.
+* **Priorité 2 : Développement de Nouvelles Heuristiques**
+    * **Objectif :** Créer des heuristiques avancées pour la sélection des mots, visant un équilibre entre :
+        * Le choix du mot qui réduit le plus de possibilités pour les variables restantes (**"Least Remaining Values"**).
+        * Le choix du mot qui a le plus d'intersections non résolues (**"Most Constraining Variable"**), afin de maximiser les contraintes tôt dans l'algorithme.
 
-Priorité 2 : Explorer et implémenter des algorithmes de résolution alternatifs, tels qu'une combinaison de recuit simulé et de backtracking, ou d'autres approches pertinentes pour la génération de mots croisés.
+* **Priorité 2 : Système d'Évaluation des Heuristiques**
+    * **Objectif :** Mettre en place un cadre pour évaluer comparativement ces heuristiques afin de déterminer laquelle offre les **meilleurs résultats** en termes de temps de génération et de qualité des grilles produites.
 
-4. Validation des Positions des Cellules
+### **3. Algorithmes de Résolution**
 
-Priorité 2 : Modifier la fonction isCrosswordCellPosValid() pour permettre une distance de 0 entre certaines cellules, utile surtout pour couper les mots en  x=1 et y=1
+* **Priorité 2 : Exploration d'Algorithmes Alternatifs**
+    * **Objectif :** Rechercher et implémenter des approches alternatives ou combinées pour la résolution et la génération de mots croisés.
+    * *Exemples à tester :*
+        * **Algorithme DLX (Dancing Links X)** pour la résolution exacte (e.g., problème de couverture exacte).
+        * **Arc Consistency** (AC-3, AC-4, etc.) pour la propagation de contraintes.
+        * **Least Constraining Value (LCV)** : Choisir la valeur qui élimine le moins d'options pour les variables restantes.
+        * **Backjumping / Conflict-Directed Backjumping** pour optimiser le retour arrière lors de l'échec.
+        * Combinaison de **recuit simulé et de backtracking**.
 
-III. Interface Utilisateur (IHM)
-1. IHM de Génération de Grilles
+* **Priorité 2 : Optimisation des Possibilités de Mots**
+    * **Objectif :** Limiter le nombre d'essais pour les mots possibles dans la fonction `possibleWord`.
+    * **Objectif :** Limiter le nombre de mots récupérés dans `fillAllWordToFind()`.
+    * *Impact : Réduire l'espace de recherche et accélérer la convergence de l'algorithme.*
 
-Priorité 3 : Créer une interface utilisateur dédiée à la génération des grilles.
+### **4. Validation des Positions des Cellules**
 
-Priorité 3 : Intégrer des fonctionnalités permettant de lancer, d'arrêter et de suivre la progression de la génération.
+* **Priorité 2 : Ajustement de `isCrosswordCellPosValid()`**
+    * **Objectif :** Modifier la fonction `isCrosswordCellPosValid()` pour permettre une distance de 0 entre certaines cellules.
+    * **Cas d'usage :** Utile pour la coupure de mots aux coordonnées `x=1` et `y=1` (par exemple, pour des mots en coin ou des grilles non standards).
 
-Priorité 3 : Ajouter des options pour configurer la génération (taille de la grille, temps alloué, algorithme et heuristique à utiliser, etc.).
+---
 
-2. IHM de Jeu
+## III. 🖥️ Interface Utilisateur (IHM)
 
-Priorité 2 : Développer l'interface utilisateur permettant aux utilisateurs de jouer aux mots croisés.
+### **1. IHM de Génération de Grilles**
 
-Priorité 1 : Implémenter les fonctionnalités de base du jeu pour interagir avec la grille.
+* **Priorité 3 : Création de l'Interface Dédiée**
+    * **Objectif :** Développer une interface utilisateur intuitive spécifiquement pour le processus de génération des grilles.
 
-Priorité 2 : Intégrer une fonction fromJson() pour charger des grilles à partir de fichiers JSON et permettre à l'utilisateur de sélectionner ces fichiers.
+* **Priorité 3 : Intégration des Fonctionnalités de Contrôle**
+    * **Objectif :** Ajouter des fonctionnalités permettant aux utilisateurs de lancer, d'arrêter et de suivre la progression en temps réel de la génération des grilles.
 
-IV. Autres Améliorations
-1. Architecture Générale
+* **Priorité 3 : Options de Configuration de Génération**
+    * **Objectif :** Inclure des options pour configurer les paramètres de génération, tels que la taille de la grille, le temps alloué, l'algorithme et l'heuristique à utiliser.
 
-Priorité 4 : Refactoriser la classe GeneratedGridData car certaines de ses données ne sont pas utilisées.
+### **2. IHM de Jeu**
 
-2. Gestion des Workers
+* **Priorité 2 : Développement de l'Interface de Jeu**
+    * **Objectif :** Concevoir et implémenter l'interface utilisateur qui permettra aux utilisateurs de jouer aux mots croisés.
 
-Priorité 1 : Dans GridGenerator, modifier stopAllActiveWorkers() pour qu'elle envoie un signal (un "flag") aux workers actifs, leur indiquant d'arrêter proprement leur algorithme en cours. Adapter les algorithmes de résolution pour qu'ils respectent ce flag.
+* **Priorité 1 : Implémentation des Fonctionnalités de Jeu de Base**
+    * **Objectif :** Mettre en œuvre les interactions fondamentales avec la grille de jeu (saisie de lettres, vérification de mots, etc.).
 
-3. Sauvegarde des Grilles
+* **Priorité 2 : Intégration du Chargement de Grilles JSON**
+    * **Objectif :** Intégrer une fonction `fromJson()` pour charger des grilles à partir de fichiers JSON et permettre à l'utilisateur de sélectionner ces fichiers via l'interface.
 
-Priorité 3 : Mettre en place un système de sauvegarde pour les grilles générées, en les organisant dans des dossiers structurés (ex: grids/8x8/threadId_gridIndex.json).
+---
 
-4. Outils et Maintenance
+## IV. 🛠️ Autres Améliorations
 
-Priorité 2 : Effectuer des vérifications régulières des performances avec des outils comme perf record ou callgrind, et rechercher les fuites de mémoire avec memcheck.
+### **1. Architecture Générale**
 
-5. Dictionnaire
+* **Priorité 4 : Refactoring de `GeneratedGridData`**
+    * **Objectif :** Refactoriser la classe `GeneratedGridData` pour éliminer les données non utilisées et simplifier sa structure.
 
-Priorité 2 : Rechercher ou créer un dictionnaire de meilleure qualité. Cela pourrait inclure l'exploration d'options payantes ou l'utilisation d'APIs (comme Gemini) pour obtenir des définitions et des indices. Envisager de filtrer les mots peu courants en fonction de leur fréquence d'apparition dans des textes.
+### **2. Gestion des Workers**
 
-Priorité 2 : Adapter les scripts Python existants pour l'analyse des mots, des définitions et l'association des indices.
+* **Priorité 1 : Signal d'Arrêt des Workers**
+    * **Objectif :** Modifier la fonction `stopAllActiveWorkers()` dans `GridGenerator` pour qu'elle envoie un signal (un "flag") aux workers actifs, leur permettant d'arrêter proprement leur algorithme en cours.
+    * **Mise en œuvre :** Adapter les algorithmes de résolution pour qu'ils surveillent et respectent ce flag d'arrêt.
 
-6. Tests et Documentation
+### **3. Sauvegarde des Grilles**
 
-Priorité 1 : Implémenter des tests unitaires (et potentiellement d'autres types de tests si le temps le permet), bien que ce soit actuellement une tâche que vous hésitez à entreprendre.
+* **Priorité 3 : Système de Sauvegarde Structuré**
+    * **Objectif :** Mettre en place un système robuste pour sauvegarder les grilles générées, en les organisant de manière logique dans des dossiers structurés (par exemple : `grids/8x8/threadId_gridIndex.json`).
 
-Priorité 1 : Demander à Gemini de commenter le code pour une meilleure compréhension et maintenabilité.
+### **4. Outils et Maintenance**
+
+* **Priorité 2 : Audits Réguliers de Performance et Fuites Mémoire**
+    * **Objectif :** Effectuer des vérifications régulières des performances avec des outils tels que `perf record` ou `callgrind`, et rechercher activement les fuites de mémoire avec `memcheck`.
+
+### **5. Dictionnaire**
+
+* **Priorité 2 : Amélioration du Dictionnaire**
+    * **Objectif :** Rechercher ou créer un dictionnaire de meilleure qualité pour les mots croisés.
+    * *Pistes :*
+        * Explorer des options de dictionnaires payants.
+        * Utiliser des APIs externes (comme Gemini, si applicable et pertinent) pour obtenir des définitions et des indices.
+        * Filtrer les mots peu courants en fonction de leur fréquence d'apparition dans de grands corpus de textes.
+
+* **Priorité 2 : Adaptation des Scripts Python**
+    * **Objectif :** Adapter les scripts Python existants pour l'analyse des mots, des définitions et l'association des indices avec le nouveau dictionnaire.
+
+### **6. Tests et Documentation**
+
+* **Priorité 1 : Implémentation de Tests Unitaires**
+    * **Objectif :** Mettre en place des tests unitaires robustes pour les composants clés du projet.
+
+* **Priorité 1 : Commentaire de Code par IA**
+    * **Objectif :** Utiliser Gemini pour générer des commentaires de code explicatifs, améliorant ainsi la compréhension et la maintenabilité du codebase.
