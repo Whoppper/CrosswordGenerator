@@ -5,16 +5,18 @@
 #include <QSize>
 #include <QString>
 #include <QSharedPointer>
-
 #include "wordtree.hpp"
 
 class DatabaseManager;
+class CrosswordManager;
 
 class GridWorker : public QObject
 {
     Q_OBJECT
 public:
     explicit GridWorker(const QSize& workerGridSize, const QString& dbFilePath, int workerDurationMs, QSharedPointer<WordTree> sharedWordTree, QObject *parent = nullptr);
+
+    void requestAlgorithmStop();
 
 public slots:
     void doWork();
@@ -29,6 +31,7 @@ private:
     DatabaseManager* dbManager; //delete by parent
     QSharedPointer<WordTree> wordTree;
     Q_DISABLE_COPY(GridWorker)
+    CrosswordManager *crosswordManager; // delete by parent
 };
 
 #endif // GRIDWORKER_HPP

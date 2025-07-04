@@ -14,7 +14,8 @@ GridWorker::GridWorker(const QSize& workerGridSize, const QString& dbPath, int w
       dbFilePath(dbPath),
       durationMs(workerDurationMs),
       dbManager(nullptr),
-      wordTree(sharedWordTree)
+      wordTree(sharedWordTree),
+      crosswordManager(nullptr)
 {
     if (!wordTree)
     {
@@ -47,11 +48,11 @@ void GridWorker::doWork()
 
 
     QString generatedContent;
-    CrosswordManager crosswordManager(dbManager,durationMs, wordTree, this);
-    bool ok = crosswordManager.generateGrid(gridSize.height(), gridSize.height());
+    crosswordManager = new CrosswordManager(dbManager,durationMs, wordTree, this);
+    bool ok = crosswordManager->generateGrid(gridSize.height(), gridSize.height());
     if (ok)
     {
-        generatedContent = crosswordManager.startCrosswordGeneration();
+        generatedContent = crosswordManager->startCrosswordGeneration();
     }
     else
     {
@@ -112,4 +113,10 @@ void GridWorker::doWork()
 
     emit gridGenerationFinished(generationSuccessful);
 
+}
+
+void GridWorker::requestAlgorithmStop()
+{
+    if (crosswordManager && crosswordManager->getSolvingAlgorithmStrategy())
+        crosswordManager->getSolvingAlgorithmStrategy()->setStopSolving(true);
 }

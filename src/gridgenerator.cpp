@@ -134,13 +134,13 @@ void GridGenerator::stopAllActiveWorkers()
     for (auto& pair : runningWorkerPairs)
     {
         QThread* thread = pair.first;
+        GridWorker* worker = pair.second;
         if (thread->isRunning())
         {
+            worker->requestAlgorithmStop();
             thread->quit();
         }
     }
-    runningWorkerPairs.clear();
-    
 }
 
 int GridGenerator::getNbSuccess() const 

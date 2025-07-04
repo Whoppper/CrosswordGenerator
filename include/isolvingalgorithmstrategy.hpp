@@ -17,7 +17,7 @@ public:
     int getMaxDurationMs() const {return maxDurationMs;}
     void setMaxDurationMs(int durationMs) {maxDurationMs = durationMs;}
     bool getStopSolving() const {return stopSolving;}
-    void setStopSolving() {stopSolving = true;}
+    void setStopSolving(bool _stopSolving) {stopSolving = _stopSolving;}
 
     int elapsedTimeMs() const
     {
@@ -28,7 +28,7 @@ public:
 
 protected:
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
-    bool stopSolving;
+    volatile bool stopSolving;
     int maxDurationMs;
 
 };
