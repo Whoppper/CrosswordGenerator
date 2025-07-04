@@ -1,6 +1,8 @@
 #include "crosswordmanager.hpp"
 #include "databasemanager.hpp"
 #include "crosswordcell.hpp"
+#include "leastwordcountselection.hpp"
+#include "backtrackingalgorithm.hpp"
 
 #include <chrono>
 #include <random>
@@ -91,8 +93,7 @@ void CrosswordManager::placeWordOnGrid(WordToFind &word, const QString& wordToTr
 CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QSharedPointer<WordTree> sharedWordTree, QObject *parent)
     : QObject(parent),
       tree(sharedWordTree),
-      dbManager(_dbManager),
-      maxDurationMs(_maxDurationMs)
+      dbManager(_dbManager)
 {
     if (!dbManager)
     {
@@ -100,7 +101,20 @@ CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDuration
     }
     Logger::getInstance().log(Logger::Debug, QString("CrosswordManager créé dans thread ID: %1 avec durée max: %2ms.")
                                 .arg((qintptr)QThread::currentThreadId())
-                                .arg(maxDurationMs));
+                                .arg(_maxDurationMs));
+
+    setWordsSelectionStrategy(new LeastWordCountSelection());
+    setSolvingAlgorithmStrategy(new BacktrackingAlgorithm(_maxDurationMs));
+}
+
+void CrosswordManager::setWordsSelectionStrategy(IWordSelectionStrategy* strategy)
+{
+    wordSelectionStrategy.reset(strategy);
+}
+
+void CrosswordManager::setSolvingAlgorithmStrategy(ISolvingAlgorithmStrategy* strategy)
+{
+    solvingAlgorithmStrategy.reset(strategy);
 }
 
 
@@ -169,65 +183,6 @@ bool CrosswordManager::generateGrid(int rows, int cols)
 }
 
 
-
-
-
-
-
-
-bool CrosswordManager::backtracking(int depth)
-{
-    visitedGrids++;
-    if (depth > maxdepth)
-    {
-        maxdepth = depth;
-    }
-        
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    int currentIndex = getNextWordToFindIndex();
-    if (currentIndex == -1)
-    {
-        return true;
-    }
-
-    WordToFind &wordToFind = *words[currentIndex];
-    if (duration_ms > maxDurationMs)
-    {
-        Logger::getInstance().log(Logger::LogLevel::Debug, QString("current word. y:%1  x:%2 ").arg(wordToFind.y()).arg(wordToFind.x()));
-        Logger::getInstance().log(Logger::LogLevel::Debug, QString("max depth:%1").arg(maxdepth));
-        throw std::runtime_error("maxDurationMs reached");
-    }
-    
-    QString letters = getWordOnGrid(wordToFind);
-
-    QVector<QString> possibleWords;
-    tree->findWordsByPattern(letters, possibleWords);
-    if (possibleWords.isEmpty())
-        return false;
-
-    std::shuffle(possibleWords.begin(), possibleWords.end(), *QRandomGenerator::global());
-    QVector<QVector<Cell>> gridCpy = grid;
-    for (const QString& word : possibleWords)
-    {
-        QVector<WordToFind*> wordsToVerify;
-        placeWordOnGrid(wordToFind, word, wordsToVerify);
-        if (!checkSpecificWordsPossible(wordsToVerify))
-        {
-            grid = gridCpy;
-            continue;
-        }
-
-        wordToFind.setPlaced(true);
-        bool result = backtracking(depth + 1);
-        if (result)
-            return true;
-        grid = gridCpy;
-        wordToFind.setPlaced(false);
-    }
-    return false;    
-}
-
 void CrosswordManager::fillAllWordToFind()
 {
     words.clear();
@@ -238,7 +193,6 @@ void CrosswordManager::fillAllWordToFind()
             grid[y][x] = Cell(grid[y][x].character());
         }
     }
-
 
     for (CrosswordCell &cwc : crosswordCells)
     {
@@ -271,25 +225,22 @@ void CrosswordManager::fillAllWordToFind()
 
 QString CrosswordManager::startCrosswordGeneration()
 {
+    if (!solvingAlgorithmStrategy)
+        return "";
     bool isOk = false;
     Logger::getInstance().log(Logger::LogLevel::Debug, "startCrosswordGeneration()");
-    start = std::chrono::high_resolution_clock::now();
     fillAllWordToFind();
-    visitedGrids = 0;
     try
     {
-        isOk = backtracking(0);
+        solvingAlgorithmStrategy->startTimer();
+        isOk = solvingAlgorithmStrategy->solve(*this);
     }
     catch (const std::exception& e)
     {
+        Logger::getInstance().log(Logger::LogLevel::Debug, QString("Crossword generation interrupted: %1").arg(e.what()));
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    Logger::getInstance().log(Logger::LogLevel::Debug, QString("backtracting finished. success: %0.").arg((int)isOk));
-    Logger::getInstance().log(Logger::LogLevel::Debug, QString("Exécution time : %0 ms").arg(duration_ms));
-    Logger::getInstance().log(Logger::LogLevel::Debug, QString("Visited grids : %0 ").arg(visitedGrids));
+    Logger::getInstance().log(Logger::LogLevel::Debug, QString("Algorithm finished. success: %0.").arg((int)isOk));
     displayGrid(Logger::LogLevel::Debug);
-
 
     if (isOk)
     {
@@ -334,29 +285,6 @@ void CrosswordManager::displayGrid(Logger::LogLevel level)
     
 }
 
-
-int CrosswordManager::getNextWordToFindIndex()
-{
-    QVector<int> cutoffs = {2,3,5,10, 20, 40, 100, 500, std::numeric_limits<int>::max()};
-
-    for (int currentCutoff : cutoffs)
-    {
-        for (int i = 0; i < words.size(); ++i)
-        {
-            if (!words[i]->isPlaced())
-            {
-                QString currentPattern = getWordOnGrid(*words[i]);
-                int numPossibleWords = tree->countWordsByPattern(currentPattern, currentCutoff);
-
-                if (numPossibleWords < currentCutoff)
-                {
-                    return i;
-                }
-            }
-        }
-    }
-    return -1;
-}
 
 bool CrosswordManager::checkSpecificWordsPossible(const QVector<WordToFind*>& wordsToCheck) const
 {

@@ -62,6 +62,8 @@ set(SOURCE_FILES
     src/wordtree.cpp
     src/gridworker.cpp
     src/gridgenerator.cpp
+    src/backtrackingalgorithm.cpp
+    src/leastwordcountselection.cpp
 
     include/logger.hpp 
     include/databasemanager.hpp
@@ -71,6 +73,10 @@ set(SOURCE_FILES
     include/gridworker.hpp
     include/gridgenerator.hpp
     include/cell.hpp
+    include/iwordselectionstrategy.hpp
+    include/isolvingalgorithmstrategy.hpp
+    include/backtrackingalgorithm.hpp
+    include/leastwordcountselection.hpp
 )
 
 add_executable(crossword src/main.cpp ${SOURCE_FILES})
