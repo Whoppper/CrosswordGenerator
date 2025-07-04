@@ -10,16 +10,6 @@
 
 class DatabaseManager;
 
-struct GeneratedGridData
-{
-    QSize size;
-    QString content;
-    bool success;
-    QString workerThreadId;
-};
-
-Q_DECLARE_METATYPE(GeneratedGridData)
-
 class GridWorker : public QObject
 {
     Q_OBJECT
@@ -30,7 +20,7 @@ public slots:
     void doWork();
 
 signals:
-    void gridGenerationFinished(const GeneratedGridData& data);
+    void gridGenerationFinished(bool success);
 
 private:
     QSize gridSize;

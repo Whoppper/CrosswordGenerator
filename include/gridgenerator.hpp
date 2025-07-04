@@ -19,17 +19,17 @@ public:
 
     explicit GridGenerator(QObject *parent = nullptr);
     void startGenerationPool();
-    QVector<GeneratedGridData> getGeneratedGrids() const;
     int getNbSuccess() const ;
+    int getNbFail() const ;
 
 signals:
 
     void allGenerationsFinished();
-    void generationProgress(int completedCount);
+    void generationProgress(int success, int fail);
 
 private slots:
 
-    void onWorkerFinished(const GeneratedGridData& data);
+    void onWorkerFinished(bool success);
     void onPoolTimeout();
 
 private:
@@ -45,8 +45,8 @@ private:
 
     QTimer poolTimer;
     QList<QPair<QThread*, GridWorker*>> runningWorkerPairs;
-    QVector<GeneratedGridData> generatedGrids;
     int nbSuccess = 0;
+    int nbFail = 0;
     QSharedPointer<WordTree> wordTree;
     DatabaseManager* dbManagerForTree;
 };

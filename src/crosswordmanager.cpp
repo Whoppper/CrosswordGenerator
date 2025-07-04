@@ -239,7 +239,7 @@ QString CrosswordManager::startCrosswordGeneration()
     {
         Logger::getInstance().log(Logger::LogLevel::Debug, QString("Crossword generation interrupted: %1").arg(e.what()));
     }
-    Logger::getInstance().log(Logger::LogLevel::Debug, QString("Algorithm finished. success: %0.").arg((int)isOk));
+    Logger::getInstance().log(Logger::LogLevel::Debug, QString("Algorithm finished success: %0.").arg((int)isOk));
     displayGrid(Logger::LogLevel::Debug);
 
     if (isOk)

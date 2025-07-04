@@ -51,7 +51,6 @@ void GridGenerator::startGenerationPool()
                                 .arg(gridSize.height()));
 
     
-    generatedGrids.clear();
     runningWorkerPairs.clear();
 
     for (int i = 0; i < nbWorkers; ++i)
@@ -89,28 +88,30 @@ void GridGenerator::launchNewWorker()
         runningWorkerPairs.removeOne({thread, worker});
         Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Paire Thread/Worker (%1/%2) retirée de la liste de suivi.")
                                     .arg((qintptr)thread).arg((qintptr)worker));
-    });
 
+        if (!poolTimer.isActive() && runningWorkerPairs.isEmpty())
+        {
+            Logger::getInstance().log(Logger::Info, "GridGenerator: Tous les workers se sont arrêtés. Fin de toutes les générations.");
+            emit allGenerationsFinished();
+        }   
+    });
 
     thread->start();
     runningWorkerPairs.append({thread, worker});
     Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Nouveau worker lancé."));
 }
 
-void GridGenerator::onWorkerFinished(const GeneratedGridData& data)
+void GridGenerator::onWorkerFinished(bool success)
 {
-    generatedGrids.append(data);
-    if (data.success == true)
+
+    if (success)
         nbSuccess++;
+    else
+        nbFail++;
 
-    Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé. Succès: %1, Thread ID: %2")
-                                .arg(data.success ? "Oui" : "Non")
-                                .arg(data.workerThreadId));
-
-    emit generationProgress(nbSuccess);
-
-    Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé"));
-
+    Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé. Succès: %1").arg(success));
+    Logger::getInstance().log(Logger::Info, QString("Total: Succès: %1 . Echecs: %2").arg(nbSuccess).arg(nbFail));
+    emit generationProgress(nbSuccess, nbFail);
     if (poolTimer.isActive())
     { 
         Logger::getInstance().log(Logger::Debug, "GridGenerator: Relance d'un nouveau worker.");
@@ -123,9 +124,7 @@ void GridGenerator::onPoolTimeout()
 {
     Logger::getInstance().log(Logger::Info, "GridGenerator: Temps imparti pour la génération écoulé. Arrêt du pool.");
     poolTimer.stop(); 
-
     stopAllActiveWorkers(); 
-    emit allGenerationsFinished();
 }
 
 
@@ -144,13 +143,12 @@ void GridGenerator::stopAllActiveWorkers()
     
 }
 
-
-QVector<GeneratedGridData> GridGenerator::getGeneratedGrids() const
-{
-    return generatedGrids;
-}
-
 int GridGenerator::getNbSuccess() const 
 {
     return nbSuccess;
+}
+
+int GridGenerator::getNbFail() const 
+{
+    return nbFail;
 }

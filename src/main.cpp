@@ -33,7 +33,6 @@ int main(int argc, char *argv[])
 {
     qInstallMessageHandler(messageHandler);
     qRegisterMetaType<Logger::LogLevel>("LogLevel");
-    qRegisterMetaType<GeneratedGridData>("GeneratedGridData");
 
     Logger::getInstance();
 
@@ -90,9 +89,9 @@ int main(int argc, char *argv[])
         });
     });
 
-    QObject::connect(&gridGenerator, &GridGenerator::generationProgress, [&](int completed){
-        Logger::getInstance().log(Logger::Info, QString("Progression du pool : %1 grilles générées.").arg(completed));
-        qDebug() << QString("Progression du pool : %1 grilles générées.").arg(completed);
+    QObject::connect(&gridGenerator, &GridGenerator::generationProgress, [&](int completed, int failed){
+        Logger::getInstance().log(Logger::Info, QString("Progression du pool : %1 grilles générées, %2 grilles ratées").arg(completed).arg(failed));
+        qDebug() << QString("Progression du pool : %1 grilles générées, %2 grilles ratées").arg(completed).arg(failed);
     });
 
 
