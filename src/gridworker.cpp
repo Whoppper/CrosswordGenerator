@@ -4,18 +4,27 @@
 #include "databasemanager.hpp"
 
 #include <QThread>
-#include <QFile>    // Pour la gestion des fichiers
-#include <QDir>     // Pour la gestion des répertoires
-#include <QDateTime> // Pour générer un timestamp unique dans le nom de fichier
+#include <QFile> 
+#include <QDir> 
+#include <QDateTime> 
 
-GridWorker::GridWorker(const QSize& workerGridSize, const QString& dbPath, int workerDurationMs, QSharedPointer<WordTree> sharedWordTree, QObject *parent)
+GridWorker::GridWorker(const QSize& workerGridSize,
+                       const QString& dbPath,
+                       int workerDurationMs,
+                       QSharedPointer<WordTree> sharedWordTree,
+                       const QString& outputDir,
+                       const QString& solvingAlgo,
+                       const QString& wordSelectionHeuristic,
+                       QObject *parent)
     : QObject(parent),
       gridSize(workerGridSize),
       dbFilePath(dbPath),
       durationMs(workerDurationMs),
-      dbManager(nullptr),
+      dbManager(nullptr), 
       wordTree(sharedWordTree),
-      crosswordManager(nullptr)
+      outputBaseDirectory(outputDir),
+      solvingAlgoName(solvingAlgo),
+      wordSelectionHeuristicName(wordSelectionHeuristic)
 {
     if (!wordTree)
     {
@@ -48,7 +57,10 @@ void GridWorker::doWork()
 
 
     QString generatedContent;
-    crosswordManager = new CrosswordManager(dbManager,durationMs, wordTree, this);
+    crosswordManager = new CrosswordManager(dbManager,wordTree, this);
+    crosswordManager->setWordsSelectionStrategy(wordSelectionHeuristicName);
+    crosswordManager->setSolvingAlgorithmStrategy(solvingAlgoName, durationMs);
+
     bool ok = crosswordManager->generateGrid(gridSize.height(), gridSize.height());
     if (ok)
     {
@@ -74,9 +86,9 @@ void GridWorker::doWork()
     bool generationSuccessful = false;                                    
     if (!generatedContent.isEmpty())
     {
-        QString dirPath = QString("grids/%1x%2")
-                              .arg(gridSize.width()) // Largeur
-                              .arg(gridSize.height()); // Hauteur
+        QString dirPath = outputBaseDirectory + QString("/%1x%2")
+                              .arg(gridSize.width())
+                              .arg(gridSize.height()); 
 
         QDir dir(dirPath);
         if (!dir.exists())

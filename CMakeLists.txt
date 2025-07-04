@@ -64,6 +64,11 @@ set(SOURCE_FILES
     src/gridgenerator.cpp
     src/backtrackingalgorithm.cpp
     src/leastwordcountselection.cpp
+    src/gameinterface.cpp
+    src/gridgenerationinterface.cpp
+    src/mainwindow.cpp
+    src/solvingalgorithmfactory.cpp
+    src/wordselectionfactory.cpp
 
     include/logger.hpp 
     include/databasemanager.hpp
@@ -77,6 +82,11 @@ set(SOURCE_FILES
     include/isolvingalgorithmstrategy.hpp
     include/backtrackingalgorithm.hpp
     include/leastwordcountselection.hpp
+    include/gameinterface.hpp
+    include/gridgenerationinterface.hpp
+    include/mainwindow.hpp
+    include/solvingalgorithmfactory.hpp
+    include/wordselectionfactory.hpp
 )
 
 add_executable(crossword src/main.cpp ${SOURCE_FILES})

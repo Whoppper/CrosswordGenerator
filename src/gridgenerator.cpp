@@ -11,15 +11,11 @@ GridGenerator::GridGenerator(QObject *parent)
 {
     
     connect(&poolTimer, &QTimer::timeout, this, &GridGenerator::onPoolTimeout);
+}
 
-    QSettings settings(":/data/config.ini", QSettings::IniFormat);
-    gridSize.setWidth(settings.value("Crossword/gridCols", 10).toInt());
-    gridSize.setHeight(settings.value("Crossword/gridRows", 10).toInt());
-    workerMaxDurationMs = settings.value("Thread/WorkerMaxDurationMs", 30000).toInt();
-    maxDurationMs = settings.value("Thread/TheadPoolMaxDurationMs", 60000).toInt();
-    nbWorkers = settings.value("Thread/NbWorkers", 5).toInt();
-    dbPath = settings.value("Database/DBPath", "../dictionary.db").toString();
 
+void GridGenerator::startGenerationPool()
+{
     dbManagerForTree = new DatabaseManager("TreeDbConnection", dbPath, this);
     if (!dbManagerForTree->openDatabase())
     {
@@ -39,11 +35,8 @@ GridGenerator::GridGenerator(QObject *parent)
         dbManagerForTree->closeDatabase();
         Logger::getInstance().log(Logger::Info, "GridGenerator: Arbre de mots rempli et base de données fermée.");
     }
-}
 
 
-void GridGenerator::startGenerationPool()
-{
     Logger::getInstance().log(Logger::Info, QString("GridGenerator: Démarrage du pool de génération : %1 threads, %2ms max, taille %3x%4.")
                                 .arg(nbWorkers)
                                 .arg(maxDurationMs)
@@ -69,7 +62,8 @@ void GridGenerator::launchNewWorker()
 {
     QThread* thread = new QThread(); // delete par le deleteLater
     
-    GridWorker* worker = new GridWorker(gridSize, dbPath, workerMaxDurationMs, wordTree); // delete par le deleteLater
+    GridWorker* worker = new GridWorker(gridSize, dbPath, workerMaxDurationMs, wordTree, outputDirectory,
+                                        solvingAlgoName, wordSelectionHeuristicName); // delete par le deleteLater
 
     worker->moveToThread(thread);
 
@@ -84,7 +78,8 @@ void GridGenerator::launchNewWorker()
     connect(thread, &QThread::finished, thread, &QObject::deleteLater);
 
 
-    connect(thread, &QThread::finished, this, [this, thread, worker]() {
+    connect(thread, &QThread::finished, this, [this, thread, worker]()
+    {
         runningWorkerPairs.removeOne({thread, worker});
         Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Paire Thread/Worker (%1/%2) retirée de la liste de suivi.")
                                     .arg((qintptr)thread).arg((qintptr)worker));
@@ -92,6 +87,7 @@ void GridGenerator::launchNewWorker()
         if (!poolTimer.isActive() && runningWorkerPairs.isEmpty())
         {
             Logger::getInstance().log(Logger::Info, "GridGenerator: Tous les workers se sont arrêtés. Fin de toutes les générations.");
+            emit totalGenerationProgress(100);
             emit allGenerationsFinished();
         }   
     });
@@ -112,8 +108,10 @@ void GridGenerator::onWorkerFinished(bool success)
     Logger::getInstance().log(Logger::Info, QString("GridGenerator: Worker terminé. Succès: %1").arg(success));
     Logger::getInstance().log(Logger::Info, QString("Total: Succès: %1 . Echecs: %2").arg(nbSuccess).arg(nbFail));
     emit generationProgress(nbSuccess, nbFail);
+    
     if (poolTimer.isActive())
     { 
+        emit totalGenerationProgress(100 - poolTimer.remainingTime() * 100 / maxDurationMs);
         Logger::getInstance().log(Logger::Debug, "GridGenerator: Relance d'un nouveau worker.");
         launchNewWorker();
     }
@@ -122,14 +120,14 @@ void GridGenerator::onWorkerFinished(bool success)
 
 void GridGenerator::onPoolTimeout()
 {
-    Logger::getInstance().log(Logger::Info, "GridGenerator: Temps imparti pour la génération écoulé. Arrêt du pool.");
-    poolTimer.stop(); 
     stopAllActiveWorkers(); 
 }
 
 
 void GridGenerator::stopAllActiveWorkers()
 {
+    Logger::getInstance().log(Logger::Info, "GridGenerator: Temps imparti pour la génération écoulé. Arrêt du pool.");
+    poolTimer.stop(); 
     Logger::getInstance().log(Logger::Debug, QString("GridGenerator: Tentative d'arrêt des workers."));
     for (auto& pair : runningWorkerPairs)
     {
@@ -151,4 +149,33 @@ int GridGenerator::getNbSuccess() const
 int GridGenerator::getNbFail() const 
 {
     return nbFail;
+}
+
+void GridGenerator::setGenerationParameters(
+    int cols,
+    int rows,
+    const QString& newDbPath,
+    int poolDuration,
+    int workerDuration,
+    int numWorkers,
+    const QString& outputDir,
+    const QString& solvingAlgo,
+    const QString& wordSelectionHeuristic
+)
+{
+    gridSize.setWidth(cols);
+    gridSize.setHeight(rows);
+    dbPath = newDbPath;
+    maxDurationMs = poolDuration;
+    workerMaxDurationMs = workerDuration;
+    nbWorkers = numWorkers;
+    outputDirectory = outputDir;
+
+    solvingAlgoName = solvingAlgo;
+    wordSelectionHeuristicName = wordSelectionHeuristic;
+}
+
+GridGenerator::~GridGenerator()
+{
+    stopAllActiveWorkers();
 }

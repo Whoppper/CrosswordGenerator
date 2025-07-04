@@ -3,6 +3,7 @@
 #include "logger.hpp"
 #include "gridworker.hpp"
 #include "gridgenerator.hpp"
+#include "mainwindow.hpp"
 
 #include <QApplication>
 #include <QFile>
@@ -76,7 +77,7 @@ int main(int argc, char *argv[])
         Logger::getInstance().log(Logger::Info, "Main thread: La base de données contient déjà des données. Saut du remplissage.");
     }
 
-    GridGenerator gridGenerator; 
+    /*GridGenerator gridGenerator; 
 
     QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, [&](){
         int nbsuccess = gridGenerator.getNbSuccess();
@@ -100,9 +101,10 @@ int main(int argc, char *argv[])
     {
         Logger::getInstance().log(Logger::Info, "Démarrage des opérations via QTimer::singleShot.");
         gridGenerator.startGenerationPool();
-    });
+    });*/
 
-    app.exec();
+    MainWindow mainWindow;
+    mainWindow.show();
     
-    return 0;
+     return app.exec();
 }

@@ -90,7 +90,7 @@ void CrosswordManager::placeWordOnGrid(WordToFind &word, const QString& wordToTr
 }
 
 
-CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QSharedPointer<WordTree> sharedWordTree, QObject *parent)
+CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, QSharedPointer<WordTree> sharedWordTree, QObject *parent)
     : QObject(parent),
       tree(sharedWordTree),
       dbManager(_dbManager)
@@ -99,22 +99,19 @@ CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, int _maxDuration
     {
         Logger::getInstance().log(Logger::Critical, "CrosswordManager créé sans DatabaseManager valide !");
     }
-    Logger::getInstance().log(Logger::Debug, QString("CrosswordManager créé dans thread ID: %1 avec durée max: %2ms.")
-                                .arg((qintptr)QThread::currentThreadId())
-                                .arg(_maxDurationMs));
+    Logger::getInstance().log(Logger::Debug, QString("CrosswordManager créé dans thread ID: %1")
+                                .arg((qintptr)QThread::currentThreadId()));
 
-    setWordsSelectionStrategy(new LeastWordCountSelection());
-    setSolvingAlgorithmStrategy(new BacktrackingAlgorithm(_maxDurationMs));
 }
 
-void CrosswordManager::setWordsSelectionStrategy(IWordSelectionStrategy* strategy)
+void CrosswordManager::setWordsSelectionStrategy(const QString &heuristicName)
 {
-    wordSelectionStrategy.reset(strategy);
+    wordSelectionStrategy.reset(WordSelectionFactory::createWordSelection(heuristicName).take());
 }
 
-void CrosswordManager::setSolvingAlgorithmStrategy(ISolvingAlgorithmStrategy* strategy)
+void CrosswordManager::setSolvingAlgorithmStrategy(const QString &algorithmName, int duration)
 {
-    solvingAlgorithmStrategy.reset(strategy);
+    solvingAlgorithmStrategy.reset(SolvingAlgorithmFactory::createAlgorithm(algorithmName, duration).take());
 }
 
 
@@ -225,8 +222,12 @@ void CrosswordManager::fillAllWordToFind()
 
 QString CrosswordManager::startCrosswordGeneration()
 {
-    if (!solvingAlgorithmStrategy)
+    if (!solvingAlgorithmStrategy || !wordSelectionStrategy)
+    {
+        Logger::getInstance().log(Logger::LogLevel::Debug, QString("Crossword generation interrupted: algoruthm or heuristic are missing"));
         return "";
+    }
+        
     bool isOk = false;
     Logger::getInstance().log(Logger::LogLevel::Debug, "startCrosswordGeneration()");
     fillAllWordToFind();

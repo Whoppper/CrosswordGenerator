@@ -18,14 +18,31 @@ class GridGenerator : public QObject
 public:
 
     explicit GridGenerator(QObject *parent = nullptr);
+    ~GridGenerator();
     void startGenerationPool();
     int getNbSuccess() const ;
     int getNbFail() const ;
+
+    void setGenerationParameters(
+        int cols,
+        int rows,
+        const QString& dbPath,
+        int poolDurationMs,
+        int workerDurationMs,
+        int numWorkers,
+        const QString& outputDir,
+        const QString& solvingAlgo, 
+        const QString& wordSelectionHeuristic
+    );
 
 signals:
 
     void allGenerationsFinished();
     void generationProgress(int success, int fail);
+    void totalGenerationProgress(int current);
+
+public slots:
+    void stopAllActiveWorkers();
 
 private slots:
 
@@ -35,13 +52,17 @@ private slots:
 private:
 
     void launchNewWorker();
-    void stopAllActiveWorkers();
+    
 
+    QSize gridSize;
+    int workerMaxDurationMs;
     int maxDurationMs;
     int nbWorkers;
-    int workerMaxDurationMs;
     QString dbPath;
-    QSize gridSize;
+    QString outputDirectory;
+    QString solvingAlgoName;
+    QString wordSelectionHeuristicName;
+
 
     QTimer poolTimer;
     QList<QPair<QThread*, GridWorker*>> runningWorkerPairs;

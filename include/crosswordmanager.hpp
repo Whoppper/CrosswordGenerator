@@ -7,6 +7,8 @@
 #include "logger.hpp"
 #include "isolvingalgorithmstrategy.hpp"
 #include "iwordselectionstrategy.hpp"
+#include "solvingalgorithmfactory.hpp"
+#include "wordselectionfactory.hpp"
 #include "logger.hpp"
 
 #include <QVector>
@@ -32,15 +34,16 @@ class CrosswordManager : public QObject
     friend class BacktrackingAlgorithm;
     friend class LeastWordCountSelection;
 public:
-    explicit CrosswordManager(DatabaseManager* _dbManager, int _maxDurationMs, QSharedPointer<WordTree> sharedWordTree,  QObject *parent = nullptr);
+    explicit CrosswordManager(DatabaseManager* _dbManager, QSharedPointer<WordTree> sharedWordTree,  QObject *parent = nullptr);
     bool generateGrid(int rows, int cols);
     QString startCrosswordGeneration();
 
 
-    void setWordsSelectionStrategy(IWordSelectionStrategy* strategy);
-    void setSolvingAlgorithmStrategy(ISolvingAlgorithmStrategy* strategy);
+    void setWordsSelectionStrategy(const QString &heuristicName);
+    void setSolvingAlgorithmStrategy(const QString &algorithmName, int duration);
     IWordSelectionStrategy* getWordsSelectionStrategy() const { return wordSelectionStrategy.data(); }
     ISolvingAlgorithmStrategy* getSolvingAlgorithmStrategy() const { return solvingAlgorithmStrategy.data(); }
+
 private:
 
     CrosswordManager(const CrosswordManager&) = delete;
