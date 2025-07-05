@@ -70,6 +70,7 @@ set(SOURCE_FILES
     src/solvingalgorithmfactory.cpp
     src/wordselectionfactory.cpp
     src/databasegenerationinterface.cpp
+    src/crosswordcellwidget.cpp
 
     include/logger.hpp 
     include/databasemanager.hpp
@@ -89,6 +90,7 @@ set(SOURCE_FILES
     include/solvingalgorithmfactory.hpp
     include/wordselectionfactory.hpp
     include/databasegenerationinterface.hpp
+    include/crosswordcellwidget.hpp
 
 )
 

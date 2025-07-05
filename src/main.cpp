@@ -38,13 +38,13 @@ int main(int argc, char *argv[])
     Logger::getInstance();
 
     QApplication app(argc, argv);
-    QFile file(":/data/styles.qss");  
+    /*QFile file(":/data/styles.qss");  
     if (file.open(QFile::ReadOnly))
     {
         QTextStream stream(&file);
         QString styleSheet = stream.readAll();
         app.setStyleSheet(styleSheet); 
-    }
+    }*/
 
     
 

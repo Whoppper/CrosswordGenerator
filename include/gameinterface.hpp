@@ -43,18 +43,19 @@ protected:
 private slots:
     void onLoadGridButtonClicked();
     void loadGridFromJson(const QString& filePath);
-    void displayGrid();
+    void displayGrid(bool showSolution = false);
     void onCellEdited(const QString &text);
 
 private:
     QVBoxLayout *mainLayout;
     QPushButton *loadGridButton;
     QGridLayout *gridDisplayLayout;
+    QPushButton *showSolutionButton;
     QLabel *statusLabel;
     
     CrosswordManager *gameCrosswordManager;
     QMap<QPoint, QLineEdit*> cellInputWidgets;
-    void updateHintsDisplay();
+    QWidget* gridContainer;
 };
 
 #endif // GAMEINTERFACE_H

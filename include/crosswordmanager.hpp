@@ -45,6 +45,7 @@ public:
     IWordSelectionStrategy* getWordsSelectionStrategy() const { return wordSelectionStrategy.data(); }
     ISolvingAlgorithmStrategy* getSolvingAlgorithmStrategy() const { return solvingAlgorithmStrategy.data(); }
     bool fromJson(const QJsonDocument& doc);
+    void fillGridWithSolution();
 
 private:
 

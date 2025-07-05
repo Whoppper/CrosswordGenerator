@@ -1,28 +1,53 @@
 #include "gameinterface.hpp"
+#include "crosswordcellwidget.hpp"
 
 GameInterface::GameInterface(QWidget *parent)
     : QWidget(parent),
       gameCrosswordManager(nullptr)
 {
-    setWindowTitle("Jouer au Mots Croisés");
+    setWindowTitle("Jouer au Mots Fléchés");
     setFixedSize(1000, 800);
 
     mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(20, 20, 20, 20);
     mainLayout->setSpacing(15);
 
+    QHBoxLayout *topButtonsLayout = new QHBoxLayout();
     loadGridButton = new QPushButton("Charger une grille", this);
     loadGridButton->setFixedHeight(40);
-    mainLayout->addWidget(loadGridButton);
+    topButtonsLayout->addWidget(loadGridButton);
+
+    showSolutionButton = new QPushButton("Afficher Solution (Debug)", this);
+    showSolutionButton->setFixedHeight(40);
+    topButtonsLayout->addWidget(showSolutionButton);
+    topButtonsLayout->addStretch();
+
+    mainLayout->addLayout(topButtonsLayout);
 
     statusLabel = new QLabel("Statut: Aucune grille chargée", this);
     mainLayout->addWidget(statusLabel);
 
-    gridDisplayLayout = new QGridLayout();
-    mainLayout->addLayout(gridDisplayLayout);
+    gridContainer = new QWidget(this);
+    gridDisplayLayout = new QGridLayout(gridContainer);
+    gridDisplayLayout->setSpacing(0);
+    gridDisplayLayout->setContentsMargins(0, 0, 0, 0);
+    gridContainer->setLayout(gridDisplayLayout);
+    QHBoxLayout *gridWrapper = new QHBoxLayout();
+    gridWrapper->addStretch();
+    gridWrapper->addWidget(gridContainer);
+    gridWrapper->addStretch();
+    mainLayout->addLayout(gridWrapper);
+
     mainLayout->addStretch();
 
     connect(loadGridButton, &QPushButton::clicked, this, &GameInterface::onLoadGridButtonClicked);
+    connect(showSolutionButton, &QPushButton::clicked, this, [this](){
+        if (gameCrosswordManager)
+            displayGrid(true);
+        else
+            QMessageBox::information(this, "Aucune grille", "Veuillez d'abord charger une grille.");
+    });
+    showSolutionButton->setEnabled(true);
 }
 
 GameInterface::~GameInterface()
@@ -78,9 +103,7 @@ void GameInterface::loadGridFromJson(const QString& filePath)
     {
         statusLabel->setText(QString("Statut: Grille %1x%2 chargée avec succès.").arg(gameCrosswordManager->grid[0].size()).arg(gameCrosswordManager->grid.size()));
         QMessageBox::information(this, "Grille chargée", "La grille a été chargée avec succès !");
-        
-        displayGrid();
-        updateHintsDisplay();
+        displayGrid(true);
         Logger::getInstance().log(Logger::Info, QString("GameInterface: Grille chargée: %1x%2").arg(gameCrosswordManager->grid[0].size()).arg(gameCrosswordManager->grid.size()));
     }
     else
@@ -93,12 +116,14 @@ void GameInterface::loadGridFromJson(const QString& filePath)
             delete gameCrosswordManager;
             gameCrosswordManager = nullptr;
         }
+        return ;
     }
+    
 }
 
-void GameInterface::displayGrid()
+void GameInterface::displayGrid(bool showSolution)
 {
-
+    
     QLayoutItem *item;
     while((item = gridDisplayLayout->takeAt(0)) != nullptr)
     {
@@ -113,9 +138,24 @@ void GameInterface::displayGrid()
     if (!gameCrosswordManager || gameCrosswordManager->grid.size() == 0 || gameCrosswordManager->grid[0].size() == 0)
         return;
 
+    // debug
+    if (showSolution)
+    {
+        gameCrosswordManager->fillGridWithSolution();
+    }
+    
 
     int rows = gameCrosswordManager->grid.size();
     int cols = gameCrosswordManager->grid[0].size();
+
+    int totalWidth = cols * 50;
+    int totalHeight = rows * 50;
+    gridContainer->setFixedSize(totalWidth, totalHeight);
+
+    QMap<QPoint, CrosswordCell*> crosswordCellsMap;
+    for (CrosswordCell& cwc : gameCrosswordManager->crosswordCells) {
+        crosswordCellsMap[cwc.pos()] = &cwc;
+    }
 
     for (int y = 0; y < rows; ++y)
     {
@@ -123,28 +163,55 @@ void GameInterface::displayGrid()
         {
             QWidget *cellWidget;
             QChar cellChar = gameCrosswordManager->grid[y][x].character();
-
-            if (cellChar == CROSSWORD_CELL)
+            QPoint currentPos(x, y);
+            if (crosswordCellsMap.contains(currentPos))
             {
-                QLabel *blackCell = new QLabel();
-                blackCell->setFixedSize(30, 30);
-                blackCell->setStyleSheet("background-color: black; border: 1px solid gray;");
-                cellWidget = blackCell;
+                CrosswordCell* cwc = crosswordCellsMap[currentPos];
+                CrosswordCellWidget *crosswordCellWidget = new CrosswordCellWidget();
+                
+                 WordToFind* rightWord = nullptr;
+                if (cwc->isRightWordEnable()) {
+                    rightWord = cwc->getRightWordAddr();
+                }
+
+                 WordToFind* downWord = nullptr;
+                if (cwc->isDownWordEnable()) {
+                    downWord = cwc->getDownWordAddr();
+                }
+                
+                crosswordCellWidget->setHints(rightWord, downWord);
+                cellWidget = crosswordCellWidget;
             } 
             else
             {
                 QLineEdit *inputCell = new QLineEdit();
-                inputCell->setFixedSize(30, 30);
+                inputCell->setFixedSize(50, 50);
                 inputCell->setMaxLength(1);
                 inputCell->setAlignment(Qt::AlignCenter);
-                inputCell->setStyleSheet("background-color: white; border: 1px solid gray; font-weight: bold;");
-                inputCell->setText("");
-
-                connect(inputCell, &QLineEdit::textEdited, this, &GameInterface::onCellEdited);
+                inputCell->setStyleSheet(
+                    "background-color: white;"
+                    "border: 1px solid black; "
+                    "font-size: 14pt; font-weight: bold; "
+                    "padding: 0px; margin: 0px;"
+                );
+                if (showSolution)
+                {
+                    inputCell->setText(QString(cellChar).toUpper());
+                    inputCell->setReadOnly(true);
+                    inputCell->setStyleSheet(inputCell->styleSheet() + " color: blue;");
+                }
+                else
+                {
+                    inputCell->setText("");
+                    inputCell->setReadOnly(false);
+                    connect(inputCell, &QLineEdit::textEdited, this, &GameInterface::onCellEdited);
+                }
                 
                 cellInputWidgets[QPoint(x, y)] = inputCell;
                 cellWidget = inputCell;
             }
+            cellWidget->setMinimumWidth(0);
+            cellWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             gridDisplayLayout->addWidget(cellWidget, y, x);
         }
     }
@@ -171,37 +238,4 @@ void GameInterface::onCellEdited(const QString &text)
             editedCell->setText(text.toUpper());
         }
     }
-}
-
-void GameInterface::updateHintsDisplay()
-{
-    // C'est un point de départ. Vous voudrez probablement un QListWidget
-    // ou une zone de texte dédiée pour afficher les indices.
-    // Pour l'instant, on peut juste les logger ou les afficher dans un QLabel simple.
-
-    // Vous pouvez créer un nouveau layout pour les indices si vous voulez
-    // qu'ils soient affichés à côté ou en dessous de la grille.
-
-    // Par exemple, ajoutons un QLabel pour l'instant (à améliorer)
-    /*QLabel *hintsLabel = new QLabel("Indices des mots:\n", this);
-    QString hintsText = "Indices des mots:\n";
-    
-    if (gameCrosswordManager) {
-        for (const WordToFind* word : gameCrosswordManager->getAllWords()) {
-            hintsText += QString("- **(%1,%2) %3**: %4 (Solution: %5)\n")
-                         .arg(word->x())
-                         .arg(word->y())
-                         .arg(word->direction == Horizontal ? "Horizontal" : "Vertical")
-                         .arg(word->hint.isEmpty() ? word->definition : word->hint) // Utiliser l'indice s'il existe, sinon la définition
-                         .arg(word->solution); // Pour le debug, on affiche la solution
-
-        }
-    }
-    hintsLabel->setText(hintsText);
-    hintsLabel->setWordWrap(true); */ // Permet le retour à la ligne automatique
-    // Ajoutez ce label à votre mainLayout, peut-être dans un QScrollArea si les indices sont nombreux.
-    // mainLayout->addWidget(hintsLabel); // Décommenter si vous voulez juste les voir pour le moment.
-    // Ou mieux, placez-le dans un layout dédié à côté de la grille.
-
-    // Vous devrez probablement gérer l'ajout/suppression de ce widget si des grilles sont rechargées.
 }

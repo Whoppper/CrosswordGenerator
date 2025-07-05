@@ -89,6 +89,17 @@ void CrosswordManager::placeWordOnGrid(WordToFind &word, const QString& wordToTr
     }
 }
 
+void CrosswordManager::fillGridWithSolution()
+{
+    QVector<WordToFind*> intersectedWords;
+    for (WordToFind *word: words)
+    {
+        placeWordOnGrid(*word, word->solution , intersectedWords);
+    }
+}
+
+
+
 
 CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, QSharedPointer<WordTree> sharedWordTree, QObject *parent)
     : QObject(parent),
@@ -265,7 +276,7 @@ QString CrosswordManager::generateJsonResponse()
 
     QJsonObject crosswordData = toJson();
     QJsonDocument doc(crosswordData);
-    QByteArray jsonData = doc.toJson(QJsonDocument::Compact); // Indented Compact
+    QByteArray jsonData = doc.toJson(QJsonDocument::Indented); // Indented Compact
     QString jsonString = QString::fromUtf8(jsonData);
     return jsonString;
 }
@@ -361,6 +372,17 @@ bool CrosswordManager::fromJson(const QJsonDocument& doc)
                 cell.fromJson(value.toObject());
                 crosswordCells.append(cell);
                 grid[cell.y()][cell.x()].setCharacter(CROSSWORD_CELL);
+            }
+        }
+        for (CrosswordCell &cwc : crosswordCells)
+        {
+            if (cwc.isRightWordEnable())
+            {
+                words.push_back(cwc.getRightWordAddr());
+            }
+            if (cwc.isDownWordEnable())
+            {
+                words.push_back(cwc.getDownWordAddr());
             }
         }
     }
