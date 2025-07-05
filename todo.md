@@ -1,6 +1,6 @@
-# 🚀 Feuille de Route du Projet Mots Croisés 🚀
+# 🚀 Feuille de Route du Projet Mots Fléchés 🚀
 
-Cette feuille de route détaille les objectifs, les priorités et les améliorations planifiées pour l'algorithme de résolution et de génération de mots croisés, ainsi que l'interface utilisateur et la maintenance du projet.
+Cette feuille de route détaille les objectifs, les priorités et les améliorations planifiées pour l'algorithme de résolution et de génération de mots fléchés, ainsi que l'interface utilisateur et la maintenance du projet.
 
 ---
 
@@ -15,7 +15,7 @@ Cette feuille de route détaille les objectifs, les priorités et les améliorat
 * **P1 : Affinage des fonctions de l'Arbre**
     * **Objectif :** Limiter les appels à `findAnyWord()` et aux fonctions d'arbre fréquemment utilisées.
     * **Justification :** Améliorer les performances globales.
-    * **Exemple :** le pattern contient "_____a_", un mot possible existe probablement sans avoir besoin de verifier.
+    * **Exemple :** le pattern contient "_____a_", un mot possible existe probablement sans avoir besoin de vérifier.
 * **P2 : Outil d'Évaluation des Performances de Recherche**
     * **Objectif :** Développer un mécanisme pour évaluer et comparer précisément les performances des recherches en fonction du type d'arbre utilisé.
     * **Résultat attendu :** Des métriques claires pour valider les gains d'optimisation.
@@ -48,10 +48,10 @@ Cette feuille de route détaille les objectifs, les priorités et les améliorat
 ### 3. Algorithmes de Résolution
 
 * **P2 : Exploration d'Algorithmes Alternatifs**
-    * **Objectif :** Rechercher et implémenter des approches alternatives ou combinées pour la résolution et la génération de mots croisés.
+    * **Objectif :** Rechercher et implémenter des approches alternatives ou combinées pour la résolution et la génération de mots fléchés.
     * **Exemples à tester :** **Algorithme DLX (Dancing Links X)** pour la résolution exacte (par exemple, problème de couverture exacte), **Arc Consistency** (AC-3, AC-4, etc.) pour la propagation de contraintes, **Backjumping / Conflict-Directed Backjumping** pour optimiser le retour arrière lors de l'échec, Combinaison de **recuit simulé et de backtracking**.
 * **P2 : Optimisation des Possibilités de Mots**
-    * **Objectif :** Limiter le nombre d'essais pour les mots possibles dans la fonction `possibleWord`.
+    * **Objectif :** Limiter le nombre d'essais pour les mots possibles de `possibleWord`.
     * **Objectif :** Limiter le nombre de mots récupérés dans `fillAllWordToFind()`.
     * **Impact :** Réduire l'espace de recherche et accélérer la convergence de l'algorithme.
 
@@ -70,19 +70,34 @@ Cette feuille de route détaille les objectifs, les priorités et les améliorat
 * **P3 : Ajouter une Fonctionnalité de Génération de Base de Données dans l'IHM Principale**
     * **Objectif :** Intégrer une option dans l'interface principale permettant de générer la base de données (choix du fichier d'entrée, du fichier de sortie, et du script de parsing à utiliser).
     * **Action :** Supprimer le chemin de la base de données (`dbpath`) du fichier de configuration.
+* **P1 : Refaire l'IHM de `generateDatabase`**
+    * **Objectif :** Concevoir une interface utilisateur plus intuitive et fonctionnelle pour la génération de la base de données, améliorant l'expérience utilisateur.
 
 ### 2. IHM de Jeu
 
 * **P1 : Implémentation des Fonctionnalités de Jeu de Base**
     * **Objectif :** Mettre en œuvre les interactions fondamentales avec la grille de jeu (saisie de lettres, vérification de mots, etc.).
 * **P2 : Développement de l'Interface de Jeu**
-    * **Objectif :** Concevoir et implémenter l'interface utilisateur qui permettra aux utilisateurs de jouer aux mots croisés.
+    * **Objectif :** Concevoir et implémenter l'interface utilisateur qui permettra aux utilisateurs de jouer aux mots fléchés.
 * **P2 : Intégration du Chargement de Grilles JSON**
-    * **Objectif :** Intégrer une fonction `fromJson()` pour charger des grilles à partir de fichiers JSON et permettre à l'utilisateur de sélectionner ces fichiers via l'interface.
+    * **Amélioration :** Ouvrir directement le dossier `grid` (s'il existe) par défaut lors du chargement des grilles.
+* **P1 : Peaufinage de `GameInterface`**
+    * **Objectif :** Finaliser l'implémentation de la `GameInterface` en s'assurant que tous les détails sont fonctionnels et esthétiques.
+    * **Actions :** Affiner le dessin des flèches dans les `CrosswordCellWidget`, les bordures, le texte, etc.
+
+### 3. Améliorations Visuelles Générales
+
+* **P1 : Refonte du Fichier `style.css`**
+    * **Objectif :** Améliorer l'esthétique de l'application en créant un fichier `style.css` plus moderne et agréable visuellement.
+    * **Pistes :** Explorer des palettes de couleurs harmonieuses, des typographies lisibles et des éléments d'interface cohérents pour une meilleure expérience utilisateur.
+* **P1 : Distinguer l'état des boutons**
+    * **Objectif :** Appliquer des styles CSS pour clairement distinguer les boutons actifs/inactifs et interactifs.
+* **P2 : Résoudre les Problèmes d'Apparence des `QMessageBox`**
+    * **Objectif :** S'assurer que les boîtes de message (`QMessageBox`) s'intègrent bien avec le thème général de l'application et ne sont pas "moches".
 
 ---
 
-## IV. 🛠️ Autres Améliorations
+## IV. 🛠️ Autres Améliorations et Maintenance
 
 ### 1. Outils et Maintenance
 
@@ -94,10 +109,10 @@ Cette feuille de route détaille les objectifs, les priorités et les améliorat
 ### 2. Dictionnaire
 
 * **P2 : Amélioration du Dictionnaire**
-    * **Objectif :** Rechercher ou créer un dictionnaire de meilleure qualité pour les mots croisés.
+    * **Objectif :** Rechercher ou créer un dictionnaire de meilleure qualité pour les mots fléchés.
     * **Pistes :** Explorer des options de dictionnaires payants, utiliser des APIs externes (comme Gemini, si applicable et pertinent) pour obtenir des définitions et des indices, filtrer les mots peu courants en fonction de leur fréquence d'apparition.
 * **P2 : Adaptation des Scripts Python**
-    * **Objectif :** Adapter les scripts Python existants pour la génération du dictionnaire avec les indices et les definitions en plus.
+    * **Objectif :** Adapter les scripts Python existants pour la génération du dictionnaire avec les indices et les définitions en plus.
 
 ### 3. Tests et Documentation
 
@@ -106,18 +121,17 @@ Cette feuille de route détaille les objectifs, les priorités et les améliorat
 * **P1 : Commentaire de Code par IA**
     * **Objectif :** Utiliser Gemini pour générer des commentaires de code explicatifs, améliorant ainsi la compréhension et la maintenabilité du codebase.
 
-### 4. Codebase
+### 4. Codebase & Qualité du Code
 
-* **P1 : Renommage et Refactorisation**
-    * **Objectif :** Renommer les fichiers selon le format **CamelCase** et trouver de meilleurs noms pour certaines variables afin d'améliorer la lisibilité du code.
+* **P1 : Renommage et Refactorisation Globale**
+    * **Objectif :** Renommer les fichiers, les variables et les méthodes selon un format cohérent (par exemple, **CamelCase**) pour améliorer la lisibilité.
+    * **Action :** Déplacer les implémentations de fonctions des fichiers `.hpp` vers les fichiers `.cpp` correspondants.
+* **P1 : Optimisation et Nettoyage des `toJson` / `fromJson`**
+    * **Objectif :** Revoir et améliorer l'efficacité et la robustesse des implémentations de `toJson()` et `fromJson()` dans toutes les classes.
+    * **Considération :** Intégrer la grille complète dans le JSON pour faciliter les sauvegardes de grilles en cours de partie.
+* **P1 : Suppression des `friend`**
+    * **Objectif :** Éliminer les déclarations `friend` dans `CrosswordManager` pour améliorer l'encapsulation et la propreté du code.
+* **P1 : Nettoyage Général du Code**
+    * **Objectif :** Réaliser un grand "ménage" du code : vérifier l'encapsulation (`public`/`private`/`protected`), supprimer le code inutilisé, simplifier les logiques complexes.
 * **P1 : Ajout de la Traduction**
     * **Objectif :** Intégrer des fonctionnalités de traduction pour l'interface utilisateur.
-
-* **P1 : Refonte du Fichier `style.css`**
-    * **Objectif :** Améliorer l'esthétique de l'application en créant un fichier `style.css` plus moderne et agréable visuellement.
-    * **Pistes :** Explorer des palettes de couleurs harmonieuses, des typographies lisibles et des éléments d'interface cohérents pour une meilleure expérience utilisateur.
-
-    ya des fonctions dans les hpp les mettre dans le cpp
-    changer les tojson et fromjson, sont pas ouf
-    mettre la grille dans le json, si je rajoute des sauvegardes de grille en cours
-    virer les friend de crossword manager
