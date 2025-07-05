@@ -11,7 +11,7 @@ enum Direction
     Vertical
 };
 
-
+class CrosswordCell;
 class WordToFind
 {
     public:
@@ -21,6 +21,7 @@ class WordToFind
     bool isPlaced() const;
     void setPlaced(bool placed);
     QJsonObject toJson() const;
+    void fromJson(const QJsonObject& json, CrosswordCell *crossCell, bool isRightWord);
     
     WordToFind() = default;
     Direction direction;
@@ -35,7 +36,7 @@ class WordToFind
 
 class CrosswordCell {
 public:
-
+    CrosswordCell() {};
     CrosswordCell(int x, int y) : position(x, y) {}
 
     QPoint pos() const { return position; }
@@ -49,6 +50,7 @@ public:
     bool isDownWordEnable() const;
     bool isRightWordEnable() const; 
     QJsonObject toJson() const;
+    void fromJson(const QJsonObject& json);
 
 
 private:

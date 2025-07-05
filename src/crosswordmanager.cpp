@@ -321,3 +321,55 @@ QJsonObject CrosswordManager::toJson() const
     crosswordJson["cells"] = cellsArray;
     return crosswordJson;
 }
+
+bool CrosswordManager::fromJson(const QJsonDocument& doc)
+{
+    if (!doc.isObject())
+    {
+        Logger::getInstance().log(Logger::Error, "CrosswordManager::fromJson: Le document JSON n'est pas un objet.");
+        return false;
+    }
+    QJsonObject obj = doc.object();
+    int rows = obj["rows"].toInt();
+    int cols = obj["cols"].toInt();
+    if (rows <= 4 || cols <= 4) {
+        Logger::getInstance().log(Logger::Error, "CrosswordManager::fromJson: Dimensions de grille invalides dans le JSON.");
+        return false;
+    }
+
+    grid.clear();
+    grid.resize(rows);
+    for (int i = 0; i < rows; ++i)
+    {
+        grid[i].resize(cols);
+        for(int j = 0; j < cols; ++j)
+        {
+            grid[i][j].setCharacter(EMPTY_LETTER);
+        }
+    }
+    crosswordCells.clear();
+    words.clear();
+
+    if (obj.contains("cells") && obj["cells"].isArray())
+    {
+        QJsonArray cellsArray = obj["cells"].toArray();
+        for (const QJsonValue& value : cellsArray)
+        {
+            if (value.isObject())
+            {
+                CrosswordCell cell;
+                cell.fromJson(value.toObject());
+                crosswordCells.append(cell);
+                grid[cell.y()][cell.x()].setCharacter(CROSSWORD_CELL);
+            }
+        }
+    }
+    else
+    {
+        Logger::getInstance().log(Logger::Error, "CrosswordManager::fromJson: Le JSON ne contient pas le tableau 'cells'.");
+        return false;
+    }
+
+    Logger::getInstance().log(Logger::Info, "CrosswordManager::fromJson: Grille chargée avec succès depuis JSON.");
+    return true;
+}

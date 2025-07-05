@@ -47,35 +47,7 @@ int main(int argc, char *argv[])
     }
 
     
-    QSettings settings(":/data/config.ini", QSettings::IniFormat);
-    QString DBPath = settings.value("Database/DBPath", "../dictionary.db").toString();
-    DatabaseManager mainDbManager("MainThreadConnection", DBPath);
-    if (!mainDbManager.openDatabase())
-    {
-        Logger::getInstance().log(Logger::Critical, "Main thread: Échec critique de l'ouverture de la base de données principale. Arrêt.");
-        return 1;
-    }
-    if (!mainDbManager.createTables())
-    {
-        Logger::getInstance().log(Logger::Critical, "Main thread: Échec critique de la création des tables. Arrêt.");
-        mainDbManager.closeDatabase();
-        return 1;
-    }
-    if (mainDbManager.isEmpty())
-    {
-        Logger::getInstance().log(Logger::Info, "Main thread: La base de données est vide, démarrage du remplissage.");
-        if (!mainDbManager.fillDB())
-        {
-            Logger::getInstance().log(Logger::Critical, "Main thread: Échec critique du remplissage de la base de données. Arrêt.");
-            mainDbManager.closeDatabase();
-            return 1;
-        }
-        Logger::getInstance().log(Logger::Info, "Main thread: Base de données remplie avec succès.");
-    }
-    else
-    {
-        Logger::getInstance().log(Logger::Info, "Main thread: La base de données contient déjà des données. Saut du remplissage.");
-    }
+
     MainWindow mainWindow;
     mainWindow.show();
     

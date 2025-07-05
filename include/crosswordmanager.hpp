@@ -33,6 +33,7 @@ class CrosswordManager : public QObject
     friend class ISolvingAlgorithmStrategy;
     friend class BacktrackingAlgorithm;
     friend class LeastWordCountSelection;
+    friend class GameInterface;
 public:
     explicit CrosswordManager(DatabaseManager* _dbManager, QSharedPointer<WordTree> sharedWordTree,  QObject *parent = nullptr);
     bool generateGrid(int rows, int cols);
@@ -43,6 +44,7 @@ public:
     void setSolvingAlgorithmStrategy(const QString &algorithmName, int duration);
     IWordSelectionStrategy* getWordsSelectionStrategy() const { return wordSelectionStrategy.data(); }
     ISolvingAlgorithmStrategy* getSolvingAlgorithmStrategy() const { return solvingAlgorithmStrategy.data(); }
+    bool fromJson(const QJsonDocument& doc);
 
 private:
 
@@ -57,6 +59,7 @@ private:
     void displayGrid(Logger::LogLevel level=Logger::LogLevel::Debug);
 
     QJsonObject toJson() const;
+    
     QString generateJsonResponse();
 
     QVector<QVector<Cell>> grid;

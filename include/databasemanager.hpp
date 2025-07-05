@@ -22,8 +22,7 @@ public:
     void fillWordsList(QVector<QString> &words);
     QSqlError lastError() const;
 
-    // à appeler uniquement dans le thread principal
-    bool fillDB();
+    bool fillDB(const QString &filePath);
     bool createTables();
     QPair<QString, QString> getWordDetails(const QString& word);
 

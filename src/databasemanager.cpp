@@ -113,14 +113,14 @@ bool DatabaseManager::isEmpty()
     return true;
 }
 
-bool DatabaseManager::fillDB()
+bool DatabaseManager::fillDB(const QString &filePath)
 {
     if (!m_db.isOpen())
     {
         Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Impossible de remplir la DB, connexion fermée.").arg(m_connectionName));
         return false;
     }
-    QFile file(":/data/dictionary.txt");
+    QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         Logger::getInstance().log(Logger::LogLevel::Error, QString("DatabaseManager '%1': Failed to open words file 'dicoClean.txt'.").arg(m_connectionName));

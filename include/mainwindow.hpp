@@ -8,6 +8,7 @@
 
 class GameInterface;
 class GridGenerationInterface;
+class DatabaseGenerationInterface;
 
 class MainWindow : public QMainWindow
 {
@@ -20,13 +21,16 @@ public:
 private slots:
     void onPlayButtonClicked();
     void onGenerateButtonClicked();
+    void onGenerateDatabaseButtonClicked();
 
 private:
     QPushButton *playButton;
     QPushButton *generateButton;
+    QPushButton *generateDatabaseButton;
 
     GameInterface *gameInterface;
     GridGenerationInterface *gridGenerationInterface;
+    DatabaseGenerationInterface *databaseGenerationInterface;
 };
 
 #endif // MAINWINDOW_H

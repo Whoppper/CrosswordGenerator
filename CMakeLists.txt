@@ -69,6 +69,7 @@ set(SOURCE_FILES
     src/mainwindow.cpp
     src/solvingalgorithmfactory.cpp
     src/wordselectionfactory.cpp
+    src/databasegenerationinterface.cpp
 
     include/logger.hpp 
     include/databasemanager.hpp
@@ -87,6 +88,8 @@ set(SOURCE_FILES
     include/mainwindow.hpp
     include/solvingalgorithmfactory.hpp
     include/wordselectionfactory.hpp
+    include/databasegenerationinterface.hpp
+
 )
 
 add_executable(crossword src/main.cpp ${SOURCE_FILES})

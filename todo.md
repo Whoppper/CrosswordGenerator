@@ -116,3 +116,8 @@ Cette feuille de route détaille les objectifs, les priorités et les améliorat
 * **P1 : Refonte du Fichier `style.css`**
     * **Objectif :** Améliorer l'esthétique de l'application en créant un fichier `style.css` plus moderne et agréable visuellement.
     * **Pistes :** Explorer des palettes de couleurs harmonieuses, des typographies lisibles et des éléments d'interface cohérents pour une meilleure expérience utilisateur.
+
+    ya des fonctions dans les hpp les mettre dans le cpp
+    changer les tojson et fromjson, sont pas ouf
+    mettre la grille dans le json, si je rajoute des sauvegardes de grille en cours
+    virer les friend de crossword manager
