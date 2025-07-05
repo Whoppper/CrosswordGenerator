@@ -98,6 +98,7 @@ CrosswordManager::CrosswordManager(DatabaseManager* _dbManager, QSharedPointer<W
     if (!dbManager)
     {
         Logger::getInstance().log(Logger::Critical, "CrosswordManager créé sans DatabaseManager valide !");
+        return ;
     }
     Logger::getInstance().log(Logger::Debug, QString("CrosswordManager créé dans thread ID: %1")
                                 .arg((qintptr)QThread::currentThreadId()));

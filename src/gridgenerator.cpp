@@ -45,6 +45,8 @@ void GridGenerator::startGenerationPool()
 
     
     runningWorkerPairs.clear();
+    nbSuccess = 0;
+    nbFail = 0;
 
     for (int i = 0; i < nbWorkers; ++i)
     {

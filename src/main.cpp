@@ -76,33 +76,6 @@ int main(int argc, char *argv[])
     {
         Logger::getInstance().log(Logger::Info, "Main thread: La base de données contient déjà des données. Saut du remplissage.");
     }
-
-    /*GridGenerator gridGenerator; 
-
-    QObject::connect(&gridGenerator, &GridGenerator::allGenerationsFinished, [&](){
-        int nbsuccess = gridGenerator.getNbSuccess();
-        Logger::getInstance().log(Logger::Info, QString("Application terminée. Total de grilles générées collectées : %1").arg(nbsuccess));
-        qDebug() << QString("Application terminée. Total de grilles générées collectées : %1").arg(nbsuccess);
-
-        QTimer::singleShot(1000, [&]()
-        {
-            QCoreApplication::quit();
-        });
-    });
-
-    QObject::connect(&gridGenerator, &GridGenerator::generationProgress, [&](int completed, int failed){
-        Logger::getInstance().log(Logger::Info, QString("Progression du pool : %1 grilles générées, %2 grilles ratées").arg(completed).arg(failed));
-        qDebug() << QString("Progression du pool : %1 grilles générées, %2 grilles ratées").arg(completed).arg(failed);
-    });
-
-
-
-    QTimer::singleShot(0, [&]()
-    {
-        Logger::getInstance().log(Logger::Info, "Démarrage des opérations via QTimer::singleShot.");
-        gridGenerator.startGenerationPool();
-    });*/
-
     MainWindow mainWindow;
     mainWindow.show();
     

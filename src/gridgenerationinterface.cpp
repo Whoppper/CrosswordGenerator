@@ -199,18 +199,8 @@ void GridGenerationInterface::onStartGenerationButtonClicked()
     failCountLabel->setText("Grilles échouées: 0");
     progressBar->setValue(0);
 
-
     gridGenerator->setGenerationParameters(cols, rows, dbPath, poolDuration, workerDuration, numWorkers, outputDir, solvingAlgo, heuristic);
-    gridGenerator->startGenerationPool(); // Lancer la pool de génération
-
-    emit startGenerationRequested(cols, rows, dbPath, poolDuration, workerDuration, numWorkers, outputDir, solvingAlgo, heuristic);
-    qDebug() << "Génération démarrée avec les paramètres:";
-    qDebug() << "  Cols:" << cols << ", Rows:" << rows;
-    qDebug() << "  DB Path:" << dbPath;
-    qDebug() << "  Pool Duration:" << poolDuration << ", Worker Duration:" << workerDuration;
-    qDebug() << "  Num Workers:" << numWorkers;
-    qDebug() << "  Output Dir:" << outputDir;
-    qDebug() << "  Algo:" << solvingAlgo << ", Heuristic:" << heuristic;
+    gridGenerator->startGenerationPool();
 }
 
 void GridGenerationInterface::onStopGenerationButtonClicked()
@@ -218,8 +208,7 @@ void GridGenerationInterface::onStopGenerationButtonClicked()
     statusLabel->setText("Statut: Arrêt demandé...");
     stopButton->setEnabled(false);
 
-    gridGenerator->stopAllActiveWorkers(); // Demander à GridGenerator d'arrêter tout (pool incluse)
-    //emit stopGenerationRequested();
+    gridGenerator->stopAllActiveWorkers();
 }
 
 void GridGenerationInterface::onGenerationProgress(int successCount, int failCount)
