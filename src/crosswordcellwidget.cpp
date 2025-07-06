@@ -5,15 +5,16 @@
 CrosswordCellWidget::CrosswordCellWidget(QWidget *parent)
     : QWidget(parent)
 {
-    setFixedSize(50, 50);
+    setFixedSize(CELL_PIXEL_SIZE, CELL_PIXEL_SIZE);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(2, 2, 2, 2);
+    mainLayout->setContentsMargins(0, 0, ARROW_MARGING, ARROW_MARGING);
     mainLayout->setSpacing(0);
 
     setStyleSheet(
         "background-color: lightgray; "
         "border: 1px solid black; "
+        "font-size: 14pt; font-weight: bold;"
         "padding: 0px; margin: 0px;"
     );
 
@@ -74,22 +75,69 @@ void CrosswordCellWidget::paintEvent(QPaintEvent *event)
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.setPen(QPen(Qt::darkRed, 2));
+    painter.setPen(QPen(Qt::black, 2));
+    painter.setBrush(QBrush(Qt::black));
 
-    // ... (Votre code pour dessiner les flèches reste le même)
-    // Exemple très simplifié pour une flèche horizontale à droite
-    if (currentRightWord && currentRightWord->direction == Direction::Horizontal) {
-        int arrowSize = 5;
-        QPoint tip = QPoint(width() - 1, rect().center().y());
-        painter.drawLine(tip - QPoint(arrowSize, arrowSize), tip);
-        painter.drawLine(tip - QPoint(arrowSize, -arrowSize), tip);
+
+    int arrowHeadSize = ARROW_MARGING /2;
+    int initialLineLength = ARROW_MARGING /2;
+
+
+    if (currentRightWord)
+    {
+        int startingHeight = currentDownWord != nullptr ? (height()-ARROW_MARGING)  / 4: (height()-ARROW_MARGING) / 2;
+
+        QPoint startPoint(width() - ARROW_MARGING, startingHeight);
+        QPoint endOfLine = QPoint(startPoint.x() + initialLineLength, startingHeight);
+        painter.drawLine(startPoint, endOfLine);
+
+        if (currentRightWord->direction == Direction::Horizontal)
+        {
+            QPolygonF arrowHead;
+            arrowHead << QPoint(width(),  startingHeight)
+                      << QPoint(endOfLine.x(), startingHeight - arrowHeadSize / 2)
+                      << QPoint(endOfLine.x(), startingHeight + arrowHeadSize / 2);
+            painter.drawPolygon(arrowHead);
+
+        }
+        else if (currentRightWord->direction == Direction::Vertical)
+        {
+            QPoint bendPoint(startPoint.x() + initialLineLength, startingHeight + initialLineLength);
+            painter.drawLine(endOfLine, bendPoint);
+
+            QPolygonF arrowHead;
+            arrowHead << QPoint(startPoint.x() + initialLineLength,  startingHeight + initialLineLength + arrowHeadSize)
+                      << QPoint(startPoint.x() + initialLineLength - arrowHeadSize / 2, startingHeight + initialLineLength )
+                      << QPoint(startPoint.x() + initialLineLength + arrowHeadSize / 2, startingHeight + initialLineLength);
+            painter.drawPolygon(arrowHead);
+        }
     }
 
-    // Exemple très simplifié pour une flèche verticale vers le bas
-    if (currentDownWord && currentDownWord->direction == Direction::Vertical) {
-        int arrowSize = 5;
-        QPoint tip = QPoint(rect().center().x(), height() - 1);
-        painter.drawLine(tip - QPoint(arrowSize, arrowSize), tip);
-        painter.drawLine(tip - QPoint(-arrowSize, arrowSize), tip);
+    if (currentDownWord)
+    {
+        QPoint startPoint(width() / 2 , height() - ARROW_MARGING);
+        QPoint endOfLine = QPoint(width() / 2 , height() - ARROW_MARGING / 2);
+        painter.drawLine(startPoint, endOfLine);
+
+        if (currentDownWord->direction == Direction::Vertical)
+        {
+            QPolygonF arrowHead;
+            arrowHead << QPoint(width() / 2,  height())
+                      << QPoint(width() / 2 - arrowHeadSize / 2, height() - ARROW_MARGING / 2)
+                      << QPoint(width() / 2 + arrowHeadSize / 2 , height() - ARROW_MARGING / 2);
+            painter.drawPolygon(arrowHead);
+
+        }
+        else if (currentDownWord->direction == Direction::Horizontal)
+        {
+            QPoint bendPoint(width() / 2 + ARROW_MARGING / 2, height() - ARROW_MARGING / 2);
+            painter.drawLine(endOfLine, bendPoint);
+
+            QPolygonF arrowHead;
+            arrowHead << QPoint(width() / 2 + ARROW_MARGING,  height() - ARROW_MARGING / 2)
+                      << QPoint(width() / 2 + ARROW_MARGING / 2, height() - ARROW_MARGING / 2 - arrowHeadSize / 2)
+                      << QPoint(width() / 2 + ARROW_MARGING / 2, height() - ARROW_MARGING / 2 + arrowHeadSize / 2);
+            painter.drawPolygon(arrowHead);
+        }
     }
 }

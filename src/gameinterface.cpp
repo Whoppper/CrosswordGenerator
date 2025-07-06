@@ -27,25 +27,34 @@ GameInterface::GameInterface(QWidget *parent)
     statusLabel = new QLabel("Statut: Aucune grille chargée", this);
     mainLayout->addWidget(statusLabel);
 
+
+    scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true); 
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded); 
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     gridContainer = new QWidget(this);
     gridDisplayLayout = new QGridLayout(gridContainer);
     gridDisplayLayout->setSpacing(0);
     gridDisplayLayout->setContentsMargins(0, 0, 0, 0);
+    gridContainer->setFixedSize(600, 600);
     gridContainer->setLayout(gridDisplayLayout);
-    QHBoxLayout *gridWrapper = new QHBoxLayout();
-    gridWrapper->addStretch();
-    gridWrapper->addWidget(gridContainer);
-    gridWrapper->addStretch();
-    mainLayout->addLayout(gridWrapper);
 
-    mainLayout->addStretch();
+    scrollArea->setWidget(gridContainer);
+    QHBoxLayout *scrollWrapper = new QHBoxLayout();
+    scrollWrapper->addStretch();
+    scrollWrapper->addWidget(scrollArea);
+    scrollWrapper->addStretch();
+    mainLayout->addLayout(scrollWrapper);
+
+    mainLayout->addWidget(scrollArea, 1);
+
 
     connect(loadGridButton, &QPushButton::clicked, this, &GameInterface::onLoadGridButtonClicked);
     connect(showSolutionButton, &QPushButton::clicked, this, [this](){
         if (gameCrosswordManager)
             displayGrid(true);
-        else
-            QMessageBox::information(this, "Aucune grille", "Veuillez d'abord charger une grille.");
     });
     showSolutionButton->setEnabled(true);
 }
@@ -68,7 +77,12 @@ void GameInterface::closeEvent(QCloseEvent *event)
 
 void GameInterface::onLoadGridButtonClicked()
 {
-    QString filePath = QFileDialog::getOpenFileName(this, "Charger une grille de mots croisés", "", "Fichiers JSON de grille (*.json);;Tous les fichiers (*)");
+     QString initialPath = "../grids/";
+    if (!QDir(initialPath).exists()) {
+        initialPath = ".";
+    }
+
+    QString filePath = QFileDialog::getOpenFileName(this, "Charger une grille de mots fléchés", initialPath, "Fichiers JSON de grille (*.json);;Tous les fichiers (*)");
     if (!filePath.isEmpty())
     {
         loadGridFromJson(filePath);
@@ -102,8 +116,7 @@ void GameInterface::loadGridFromJson(const QString& filePath)
     if (gameCrosswordManager->fromJson(doc))
     {
         statusLabel->setText(QString("Statut: Grille %1x%2 chargée avec succès.").arg(gameCrosswordManager->grid[0].size()).arg(gameCrosswordManager->grid.size()));
-        QMessageBox::information(this, "Grille chargée", "La grille a été chargée avec succès !");
-        displayGrid(true);
+        displayGrid();
         Logger::getInstance().log(Logger::Info, QString("GameInterface: Grille chargée: %1x%2").arg(gameCrosswordManager->grid[0].size()).arg(gameCrosswordManager->grid.size()));
     }
     else
@@ -148,8 +161,8 @@ void GameInterface::displayGrid(bool showSolution)
     int rows = gameCrosswordManager->grid.size();
     int cols = gameCrosswordManager->grid[0].size();
 
-    int totalWidth = cols * 50;
-    int totalHeight = rows * 50;
+    int totalWidth = cols * CELL_PIXEL_SIZE;
+    int totalHeight = rows * CELL_PIXEL_SIZE;
     gridContainer->setFixedSize(totalWidth, totalHeight);
 
     QMap<QPoint, CrosswordCell*> crosswordCellsMap;
@@ -185,7 +198,7 @@ void GameInterface::displayGrid(bool showSolution)
             else
             {
                 QLineEdit *inputCell = new QLineEdit();
-                inputCell->setFixedSize(50, 50);
+                inputCell->setFixedSize(CELL_PIXEL_SIZE, CELL_PIXEL_SIZE);
                 inputCell->setMaxLength(1);
                 inputCell->setAlignment(Qt::AlignCenter);
                 inputCell->setStyleSheet(
@@ -198,7 +211,7 @@ void GameInterface::displayGrid(bool showSolution)
                 {
                     inputCell->setText(QString(cellChar).toUpper());
                     inputCell->setReadOnly(true);
-                    inputCell->setStyleSheet(inputCell->styleSheet() + " color: blue;");
+                    inputCell->setStyleSheet(inputCell->styleSheet() + " color: black;");
                 }
                 else
                 {

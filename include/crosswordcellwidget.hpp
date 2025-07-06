@@ -8,6 +8,9 @@
 
 #include "crosswordcell.hpp"
 
+constexpr int CELL_PIXEL_SIZE = 80;
+constexpr int ARROW_MARGING = 8;
+
 class CrosswordCellWidget : public QWidget
 {
     Q_OBJECT

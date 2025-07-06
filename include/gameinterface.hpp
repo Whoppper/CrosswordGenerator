@@ -14,6 +14,7 @@
 #include <QFileDialog>
 #include <QLineEdit> 
 #include <QMap>
+#include <QScrollArea>
 
 #include "crosswordmanager.hpp"
 #include "crosswordcell.hpp" 
@@ -55,6 +56,7 @@ private:
     
     CrosswordManager *gameCrosswordManager;
     QMap<QPoint, QLineEdit*> cellInputWidgets;
+    QScrollArea *scrollArea;
     QWidget* gridContainer;
 };
 
